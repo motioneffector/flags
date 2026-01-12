@@ -393,4 +393,4 @@ Works in all modern browsers (ES2022+). For older browsers, transpile your code.
 
 ## License
 
-MIT © [MotionEffector](https://github.com/motioneffector)
+MIT © [motioneffector](https://github.com/motioneffector)
