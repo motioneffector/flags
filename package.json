@@ -1,8 +1,31 @@
 {
   "name": "@motioneffector/flags",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "TypeScript library for managing application state flags with powerful condition evaluation",
+  "author": "motioneffector",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/motioneffector/flags"
+  },
+  "homepage": "https://github.com/motioneffector/flags#readme",
+  "bugs": {
+    "url": "https://github.com/motioneffector/flags/issues"
+  },
+  "keywords": [
+    "flags",
+    "feature-flags",
+    "state-management",
+    "conditions",
+    "expressions",
+    "game-state",
+    "boolean",
+    "counters",
+    "typescript"
+  ],
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -13,13 +36,26 @@
   "files": [
     "dist"
   ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "test": "vitest"
+    "build": "tsc && vite build",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src",
+    "format": "prettier --write src",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run test:run && npm run build"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
     "typescript": "^5.7.2",
+    "typescript-eslint": "^8.0.0",
     "vite": "^6.0.7",
     "vite-plugin-dts": "^4.4.0",
     "vitest": "^2.1.8"
