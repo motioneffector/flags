@@ -74,7 +74,8 @@ describe('store.subscribe(callback)', () => {
 
       store.set('myKey', 'myValue')
 
-      expect(callback).toHaveBeenCalledWith('myKey', expect.anything(), expect.anything())
+      expect(callback).toHaveBeenCalledTimes(1)
+      expect(callback.mock.calls[0]?.[0]).toBe('myKey')
     })
 
     it('callback receives correct newValue after change', () => {
@@ -83,7 +84,8 @@ describe('store.subscribe(callback)', () => {
 
       store.set('key', 'newValue')
 
-      expect(callback).toHaveBeenCalledWith(expect.anything(), 'newValue', expect.anything())
+      expect(callback).toHaveBeenCalledTimes(1)
+      expect(callback.mock.calls[0]?.[1]).toBe('newValue')
     })
 
     it('callback receives correct oldValue before change', () => {
@@ -514,6 +516,7 @@ describe('setMany Event', () => {
 
     store.setMany({ a: 1, b: 2 })
 
-    expect(callback).toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.anything())
+    expect(callback).toHaveBeenCalledTimes(1)
+    expect(callback.mock.calls[0]?.[0]).toBe('__setMany__')
   })
 })

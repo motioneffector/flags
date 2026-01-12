@@ -277,6 +277,9 @@ export function createFlagStore(
     const subscribersCopy = [...subscribers]
 
     for (const callback of subscribersCopy) {
+      // Check if callback is still subscribed (may have been removed during iteration)
+      if (!subscribers.includes(callback)) continue
+
       try {
         callback(key, newValue, oldValue)
       } catch (error) {
@@ -297,6 +300,9 @@ export function createFlagStore(
     if (keyCallbacks) {
       const keyCallbacksCopy = [...keyCallbacks]
       for (const callback of keyCallbacksCopy) {
+        // Check if callback is still subscribed (may have been removed during iteration)
+        if (!keyCallbacks.includes(callback)) continue
+
         try {
           callback(newValue, oldValue)
         } catch (error) {

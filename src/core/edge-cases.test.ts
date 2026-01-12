@@ -34,7 +34,7 @@ describe('Key Edge Cases', () => {
     store.set('  key  ', 'value')
 
     expect(store.get('key')).toBe('value')
-    expect(store.has('  key  ')).toBe(false)
+    expect(store.has('  key  ')).toBe(true) // Trimmed to 'key' which exists
   })
 })
 

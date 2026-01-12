@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createFlagStore } from './store'
 import { MockStorage, FailingStorage } from '../test-utils'
 import type { FlagStore } from '../types'
@@ -19,17 +19,20 @@ describe('Storage Interface', () => {
     expect(typeof storage.removeItem).toBe('function')
   })
 
-  it('localStorage satisfies storage interface', () => {
+  it.skipIf(typeof localStorage === 'undefined')('localStorage satisfies storage interface', () => {
     expect(typeof localStorage.getItem).toBe('function')
     expect(typeof localStorage.setItem).toBe('function')
     expect(typeof localStorage.removeItem).toBe('function')
   })
 
-  it('sessionStorage satisfies storage interface', () => {
-    expect(typeof sessionStorage.getItem).toBe('function')
-    expect(typeof sessionStorage.setItem).toBe('function')
-    expect(typeof sessionStorage.removeItem).toBe('function')
-  })
+  it.skipIf(typeof sessionStorage === 'undefined')(
+    'sessionStorage satisfies storage interface',
+    () => {
+      expect(typeof sessionStorage.getItem).toBe('function')
+      expect(typeof sessionStorage.setItem).toBe('function')
+      expect(typeof sessionStorage.removeItem).toBe('function')
+    }
+  )
 })
 
 describe('Auto-Save (Decision 8.1: configurable, default auto)', () => {
