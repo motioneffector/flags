@@ -6,6 +6,10 @@ A TypeScript library for managing application state flags with powerful conditio
 [![license](https://img.shields.io/npm/l/@motioneffector/flags.svg)](https://github.com/motioneffector/flags/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
+## Demo
+
+Try the [interactive demo](https://motioneffector.github.io/flags/) to see the library in action.
+
 ## Installation
 
 ```bash
@@ -373,10 +377,6 @@ try {
   }
 }
 ```
-
-## Demo
-
-Try the [interactive demo](https://motioneffector.github.io/flags/demo.html) to see the library in action.
 
 ## Use Cases
 
