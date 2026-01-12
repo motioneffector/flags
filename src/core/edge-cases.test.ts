@@ -16,7 +16,7 @@ describe('Key Edge Cases', () => {
     expect(store.get(longKey)).toBe('value')
   })
 
-  it('Unicode in key names works: \'über_flag\', \'日本語\'', () => {
+  it("Unicode in key names works: 'über_flag', '日本語'", () => {
     store.set('über_flag', true)
     store.set('日本語', 'value')
 
@@ -24,7 +24,7 @@ describe('Key Edge Cases', () => {
     expect(store.get('日本語')).toBe('value')
   })
 
-  it('key with only numbers: \'123\'', () => {
+  it("key with only numbers: '123'", () => {
     store.set('123', 'value')
 
     expect(store.get('123')).toBe('value')
@@ -116,7 +116,7 @@ describe('Condition Edge Cases', () => {
     expect(store.check(condition)).toBe(true)
   })
 
-  it('numeric-looking flag name \'123\' can be used in conditions', () => {
+  it("numeric-looking flag name '123' can be used in conditions", () => {
     store.set('123', true)
 
     expect(store.check('123')).toBe(true)

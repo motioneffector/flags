@@ -190,14 +190,14 @@ describe('Storage Key (Decision 8.3: configurable with default)', () => {
     storage = new MockStorage()
   })
 
-  it('default storage key is \'@motioneffector/flags\'', () => {
+  it("default storage key is '@motioneffector/flags'", () => {
     const store = createFlagStore({ persist: { storage } })
     store.set('key', 'value')
 
     expect(storage.getItem('@motioneffector/flags')).toBeTruthy()
   })
 
-  it('custom key via { persist: { storage, key: \'custom\' } }', () => {
+  it("custom key via { persist: { storage, key: 'custom' } }", () => {
     const store = createFlagStore({ persist: { storage, key: 'custom' } })
     store.set('key', 'value')
 
@@ -205,7 +205,7 @@ describe('Storage Key (Decision 8.3: configurable with default)', () => {
     expect(storage.getItem('@motioneffector/flags')).toBeNull()
   })
 
-  it('different stores with different keys don\'t conflict', () => {
+  it("different stores with different keys don't conflict", () => {
     const store1 = createFlagStore({ persist: { storage, key: 'store1' } })
     const store2 = createFlagStore({ persist: { storage, key: 'store2' } })
 
@@ -396,7 +396,7 @@ describe('Multiple Stores (Decision 8.4: yes)', () => {
     expect(store2.get('key')).toBe('value2')
   })
 
-  it('stores don\'t interfere with each other', () => {
+  it("stores don't interfere with each other", () => {
     const store1 = createFlagStore({ persist: { storage, key: 'store1' } })
     const store2 = createFlagStore({ persist: { storage, key: 'store2' } })
 

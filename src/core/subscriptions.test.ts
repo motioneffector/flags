@@ -190,7 +190,7 @@ describe('store.subscribe(callback)', () => {
       expect(callOrder).toEqual([1, 2, 3])
     })
 
-    it('unsubscribing one doesn\'t affect others', () => {
+    it("unsubscribing one doesn't affect others", () => {
       const callback1 = vi.fn()
       const callback2 = vi.fn()
       const callback3 = vi.fn()
@@ -252,7 +252,7 @@ describe('store.subscribe(callback)', () => {
   })
 
   describe('Callback Error Handling (Decision 6.2: catch, log, continue)', () => {
-    it('error in one callback doesn\'t prevent other callbacks', () => {
+    it("error in one callback doesn't prevent other callbacks", () => {
       const errorCallback = vi.fn(() => {
         throw new Error('Callback error')
       })
@@ -294,7 +294,7 @@ describe('store.subscribe(callback)', () => {
   })
 
   describe('Subscription During Callback (Decision 6.3: after current cycle)', () => {
-    it('new subscription during callback doesn\'t fire for current change', () => {
+    it("new subscription during callback doesn't fire for current change", () => {
       const newCallback = vi.fn()
       const existingCallback = vi.fn(() => {
         store.subscribe(newCallback)
@@ -457,7 +457,7 @@ describe('store.subscribeKey(key, callback)', () => {
   })
 })
 
-describe('Clear Event (Decision 6.1: single \'clear\' event)', () => {
+describe("Clear Event (Decision 6.1: single 'clear' event)", () => {
   let store: FlagStore
 
   beforeEach(() => {
@@ -473,7 +473,7 @@ describe('Clear Event (Decision 6.1: single \'clear\' event)', () => {
     expect(callback).toHaveBeenCalledTimes(1)
   })
 
-  it('callback receives (\'__clear__\', undefined, undefined) or similar marker', () => {
+  it("callback receives ('__clear__', undefined, undefined) or similar marker", () => {
     const callback = vi.fn()
     store.subscribe(callback)
 

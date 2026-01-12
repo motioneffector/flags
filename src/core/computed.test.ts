@@ -57,7 +57,11 @@ describe('store.compute(key, dependencies, fn)', () => {
     it('computed with multiple dependencies', () => {
       store.set('baseScore', 100)
       store.set('bonus', 20)
-      store.compute('totalScore', ['baseScore', 'bonus'], (base, bonus) => (base as number) + (bonus as number))
+      store.compute(
+        'totalScore',
+        ['baseScore', 'bonus'],
+        (base, bonus) => (base as number) + (bonus as number)
+      )
 
       expect(store.get('totalScore')).toBe(120)
     })
@@ -96,15 +100,19 @@ describe('store.compute(key, dependencies, fn)', () => {
       expect(store.check('sum')).toBe(true)
     })
 
-    it('check(\'computedFlag > 100\') works', () => {
+    it("check('computedFlag > 100') works", () => {
       store.set('baseScore', 100)
       store.set('bonus', 50)
-      store.compute('totalScore', ['baseScore', 'bonus'], (base, bonus) => (base as number) + (bonus as number))
+      store.compute(
+        'totalScore',
+        ['baseScore', 'bonus'],
+        (base, bonus) => (base as number) + (bonus as number)
+      )
 
       expect(store.check('totalScore > 100')).toBe(true)
     })
 
-    it('check(\'computedFlag AND otherFlag\') works', () => {
+    it("check('computedFlag AND otherFlag') works", () => {
       store.set('a', 1)
       store.set('b', 2)
       store.compute('sum', ['a', 'b'], (a, b) => (a as number) + (b as number))

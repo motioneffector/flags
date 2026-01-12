@@ -17,21 +17,21 @@ describe('store.namespace(prefix)', () => {
       expect(typeof scoped.set).toBe('function')
     })
 
-    it('scoped.set(\'key\', value) actually sets \'prefix.key\' in root store', () => {
+    it("scoped.set('key', value) actually sets 'prefix.key' in root store", () => {
       const scoped = store.namespace('prefix')
       scoped.set('key', 'value')
 
       expect(store.get('prefix.key')).toBe('value')
     })
 
-    it('scoped.get(\'key\') retrieves \'prefix.key\' from root store', () => {
+    it("scoped.get('key') retrieves 'prefix.key' from root store", () => {
       store.set('prefix.key', 'value')
       const scoped = store.namespace('prefix')
 
       expect(scoped.get('key')).toBe('value')
     })
 
-    it('scoped.has(\'key\') checks \'prefix.key\' in root store', () => {
+    it("scoped.has('key') checks 'prefix.key' in root store", () => {
       store.set('prefix.key', 'value')
       const scoped = store.namespace('prefix')
 
@@ -39,7 +39,7 @@ describe('store.namespace(prefix)', () => {
       expect(scoped.has('other')).toBe(false)
     })
 
-    it('scoped.delete(\'key\') removes \'prefix.key\' from root store', () => {
+    it("scoped.delete('key') removes 'prefix.key' from root store", () => {
       store.set('prefix.key', 'value')
       const scoped = store.namespace('prefix')
 
@@ -50,21 +50,21 @@ describe('store.namespace(prefix)', () => {
   })
 
   describe('Separator (Decision 9.1: dot)', () => {
-    it('namespace uses dot separator: \'prefix.key\'', () => {
+    it("namespace uses dot separator: 'prefix.key'", () => {
       const scoped = store.namespace('prefix')
       scoped.set('key', 'value')
 
       expect(store.get('prefix.key')).toBe('value')
     })
 
-    it('namespace(\'player\').set(\'health\', 100) creates \'player.health\'', () => {
+    it("namespace('player').set('health', 100) creates 'player.health'", () => {
       const player = store.namespace('player')
       player.set('health', 100)
 
       expect(store.get('player.health')).toBe(100)
     })
 
-    it('namespace(\'game\').namespace(\'player\') creates \'game.player.key\'', () => {
+    it("namespace('game').namespace('player') creates 'game.player.key'", () => {
       const game = store.namespace('game')
       const player = game.namespace('player')
       player.set('health', 100)
@@ -74,7 +74,7 @@ describe('store.namespace(prefix)', () => {
   })
 
   describe('Scoped Operations', () => {
-    it('scoped.toggle(\'flag\') toggles \'prefix.flag\'', () => {
+    it("scoped.toggle('flag') toggles 'prefix.flag'", () => {
       const scoped = store.namespace('prefix')
       scoped.set('flag', true)
 
@@ -83,7 +83,7 @@ describe('store.namespace(prefix)', () => {
       expect(store.get('prefix.flag')).toBe(false)
     })
 
-    it('scoped.increment(\'count\') increments \'prefix.count\'', () => {
+    it("scoped.increment('count') increments 'prefix.count'", () => {
       const scoped = store.namespace('prefix')
       scoped.set('count', 10)
 
@@ -92,7 +92,7 @@ describe('store.namespace(prefix)', () => {
       expect(store.get('prefix.count')).toBe(15)
     })
 
-    it('scoped.decrement(\'count\') decrements \'prefix.count\'', () => {
+    it("scoped.decrement('count') decrements 'prefix.count'", () => {
       const scoped = store.namespace('prefix')
       scoped.set('count', 10)
 
@@ -142,14 +142,14 @@ describe('store.namespace(prefix)', () => {
   })
 
   describe('Scoped Conditions (Decision 9.3: auto-prefix all flags)', () => {
-    it('scoped.check(\'flag\') checks \'prefix.flag\'', () => {
+    it("scoped.check('flag') checks 'prefix.flag'", () => {
       store.set('prefix.flag', true)
       const scoped = store.namespace('prefix')
 
       expect(scoped.check('flag')).toBe(true)
     })
 
-    it('scoped.check(\'a AND b\') checks \'prefix.a AND prefix.b\'', () => {
+    it("scoped.check('a AND b') checks 'prefix.a AND prefix.b'", () => {
       store.set('prefix.a', true)
       store.set('prefix.b', true)
       const scoped = store.namespace('prefix')
@@ -157,7 +157,7 @@ describe('store.namespace(prefix)', () => {
       expect(scoped.check('a AND b')).toBe(true)
     })
 
-    it('scoped.check(\'count > 5\') checks \'prefix.count > 5\'', () => {
+    it("scoped.check('count > 5') checks 'prefix.count > 5'", () => {
       store.set('prefix.count', 10)
       const scoped = store.namespace('prefix')
 
@@ -171,7 +171,7 @@ describe('store.namespace(prefix)', () => {
       expect(scoped.check('flag == "value"')).toBe(true)
     })
 
-    it('scoped.check(\'(a OR b) AND c\') prefixes all: \'prefix.a\', \'prefix.b\', \'prefix.c\'', () => {
+    it("scoped.check('(a OR b) AND c') prefixes all: 'prefix.a', 'prefix.b', 'prefix.c'", () => {
       store.set('prefix.a', false)
       store.set('prefix.b', true)
       store.set('prefix.c', true)
@@ -182,7 +182,7 @@ describe('store.namespace(prefix)', () => {
   })
 
   describe('Nested Namespaces', () => {
-    it('namespace(\'a\').namespace(\'b\') creates prefix \'a.b\'', () => {
+    it("namespace('a').namespace('b') creates prefix 'a.b'", () => {
       const a = store.namespace('a')
       const b = a.namespace('b')
 
@@ -192,10 +192,7 @@ describe('store.namespace(prefix)', () => {
     })
 
     it('deeply nested namespaces work correctly', () => {
-      const ns = store
-        .namespace('level1')
-        .namespace('level2')
-        .namespace('level3')
+      const ns = store.namespace('level1').namespace('level2').namespace('level3')
 
       ns.set('key', 'value')
 
@@ -228,7 +225,7 @@ describe('store.namespace(prefix)', () => {
       expect(callback).toHaveBeenCalledWith('prefix.key', 'value', undefined)
     })
 
-    it('subscriptions on namespace only fire for that namespace\'s changes', () => {
+    it("subscriptions on namespace only fire for that namespace's changes", () => {
       const scoped = store.namespace('prefix')
       const callback = vi.fn()
       scoped.subscribe(callback)
@@ -242,12 +239,12 @@ describe('store.namespace(prefix)', () => {
   })
 
   describe('Keys with Dots (Decision 9.2)', () => {
-    it('root store can have keys with dots: set(\'a.b\', true)', () => {
+    it("root store can have keys with dots: set('a.b', true)", () => {
       store.set('a.b', true)
       expect(store.get('a.b')).toBe(true)
     })
 
-    it('\'a.b\' key is distinct from namespace(\'a\').set(\'b\', true) - both create \'a.b\'', () => {
+    it("'a.b' key is distinct from namespace('a').set('b', true) - both create 'a.b'", () => {
       store.set('a.b', 'direct')
       const scoped = store.namespace('a')
       scoped.set('b', 'scoped')
@@ -256,7 +253,7 @@ describe('store.namespace(prefix)', () => {
       expect(store.get('a.b')).toBe('scoped')
     })
 
-    it('accessing via namespace(\'a\').get(\'b\') returns value set via set(\'a.b\', true)', () => {
+    it("accessing via namespace('a').get('b') returns value set via set('a.b', true)", () => {
       store.set('a.b', 'value')
       const scoped = store.namespace('a')
 

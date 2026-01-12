@@ -60,7 +60,7 @@ describe('createFlagStore(options?)', () => {
       expect(store.all()).toEqual({ a: 1, b: 2 })
     })
 
-    it('initial values with falsy values (false, 0, \'\') are set correctly', () => {
+    it("initial values with falsy values (false, 0, '') are set correctly", () => {
       const store = createFlagStore({
         initial: {
           boolFalse: false,
@@ -76,9 +76,7 @@ describe('createFlagStore(options?)', () => {
 
   describe('Options Validation', () => {
     it('accepts { initial: Record<string, boolean | number | string> }', () => {
-      expect(() =>
-        createFlagStore({ initial: { a: true, b: 1, c: 'test' } })
-      ).not.toThrow()
+      expect(() => createFlagStore({ initial: { a: true, b: 1, c: 'test' } })).not.toThrow()
     })
 
     it('accepts { persist: { storage: Storage } }', () => {
@@ -136,27 +134,19 @@ describe('createFlagStore(options?)', () => {
     })
 
     it('throws ValidationError if initial contains null value', () => {
-      expect(() =>
-        createFlagStore({ initial: { key: null as any } })
-      ).toThrow(ValidationError)
+      expect(() => createFlagStore({ initial: { key: null as any } })).toThrow(ValidationError)
     })
 
     it('throws ValidationError if initial contains undefined value', () => {
-      expect(() =>
-        createFlagStore({ initial: { key: undefined as any } })
-      ).toThrow(ValidationError)
+      expect(() => createFlagStore({ initial: { key: undefined as any } })).toThrow(ValidationError)
     })
 
     it('throws ValidationError if initial contains object value', () => {
-      expect(() =>
-        createFlagStore({ initial: { key: {} as any } })
-      ).toThrow(ValidationError)
+      expect(() => createFlagStore({ initial: { key: {} as any } })).toThrow(ValidationError)
     })
 
     it('throws ValidationError if initial contains array value', () => {
-      expect(() =>
-        createFlagStore({ initial: { key: [] as any } })
-      ).toThrow(ValidationError)
+      expect(() => createFlagStore({ initial: { key: [] as any } })).toThrow(ValidationError)
     })
 
     it('throws ValidationError if initial key is empty string', () => {
@@ -164,21 +154,15 @@ describe('createFlagStore(options?)', () => {
     })
 
     it('throws ValidationError if initial key contains spaces', () => {
-      expect(() =>
-        createFlagStore({ initial: { 'my flag': 'value' } })
-      ).toThrow(ValidationError)
+      expect(() => createFlagStore({ initial: { 'my flag': 'value' } })).toThrow(ValidationError)
     })
 
     it('throws ValidationError if initial key contains comparison operator', () => {
-      expect(() =>
-        createFlagStore({ initial: { 'key>5': 'value' } })
-      ).toThrow(ValidationError)
+      expect(() => createFlagStore({ initial: { 'key>5': 'value' } })).toThrow(ValidationError)
     })
 
     it('throws ValidationError if initial key starts with !', () => {
-      expect(() =>
-        createFlagStore({ initial: { '!key': 'value' } })
-      ).toThrow(ValidationError)
+      expect(() => createFlagStore({ initial: { '!key': 'value' } })).toThrow(ValidationError)
     })
 
     it('throws ValidationError if initial key is reserved word (AND, OR, NOT)', () => {
@@ -303,15 +287,15 @@ describe('store.set(key, value)', () => {
       expect(() => store.set('flag123', true)).not.toThrow()
     })
 
-    it('allows keys with underscores: \'my_flag\'', () => {
+    it("allows keys with underscores: 'my_flag'", () => {
       expect(() => store.set('my_flag', true)).not.toThrow()
     })
 
-    it('allows keys with hyphens: \'my-flag\'', () => {
+    it("allows keys with hyphens: 'my-flag'", () => {
       expect(() => store.set('my-flag', true)).not.toThrow()
     })
 
-    it('allows keys with dots: \'player.health\' (not treated as namespace)', () => {
+    it("allows keys with dots: 'player.health' (not treated as namespace)", () => {
       expect(() => store.set('player.health', 100)).not.toThrow()
     })
 
@@ -328,59 +312,59 @@ describe('store.set(key, value)', () => {
       expect(() => store.set('   ', 'value')).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key containing spaces: \'my flag\'', () => {
+    it("throws ValidationError for key containing spaces: 'my flag'", () => {
       expect(() => store.set('my flag', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key containing \'>\'', () => {
+    it("throws ValidationError for key containing '>'", () => {
       expect(() => store.set('key>5', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key containing \'<\'', () => {
+    it("throws ValidationError for key containing '<'", () => {
       expect(() => store.set('key<5', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key containing \'>=\'', () => {
+    it("throws ValidationError for key containing '>='", () => {
       expect(() => store.set('key>=5', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key containing \'<=\'', () => {
+    it("throws ValidationError for key containing '<='", () => {
       expect(() => store.set('key<=5', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key containing \'==\'', () => {
+    it("throws ValidationError for key containing '=='", () => {
       expect(() => store.set('key==5', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key containing \'!=\'', () => {
+    it("throws ValidationError for key containing '!='", () => {
       expect(() => store.set('key!=5', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key starting with \'!\'', () => {
+    it("throws ValidationError for key starting with '!'", () => {
       expect(() => store.set('!key', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key \'AND\' (case-insensitive)', () => {
+    it("throws ValidationError for key 'AND' (case-insensitive)", () => {
       expect(() => store.set('AND', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key \'and\'', () => {
+    it("throws ValidationError for key 'and'", () => {
       expect(() => store.set('and', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key \'OR\' (case-insensitive)', () => {
+    it("throws ValidationError for key 'OR' (case-insensitive)", () => {
       expect(() => store.set('OR', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key \'or\'', () => {
+    it("throws ValidationError for key 'or'", () => {
       expect(() => store.set('or', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key \'NOT\' (case-insensitive)', () => {
+    it("throws ValidationError for key 'NOT' (case-insensitive)", () => {
       expect(() => store.set('NOT', true)).toThrow(ValidationError)
     })
 
-    it('throws ValidationError for key \'not\'', () => {
+    it("throws ValidationError for key 'not'", () => {
       expect(() => store.set('not', true)).toThrow(ValidationError)
     })
   })
@@ -508,7 +492,7 @@ describe('store.delete(key)', () => {
     expect(store.has('key')).toBe(false)
   })
 
-  it('no-op if key doesn\'t exist (no error thrown)', () => {
+  it("no-op if key doesn't exist (no error thrown)", () => {
     expect(() => store.delete('nonexistent')).not.toThrow()
   })
 
@@ -665,17 +649,17 @@ describe('store.increment(key, amount?)', () => {
       expect(store.get('newCount')).toBe(5)
     })
 
-    it('increment(\'newKey\') results in value 1', () => {
+    it("increment('newKey') results in value 1", () => {
       store.increment('newKey')
       expect(store.get('newKey')).toBe(1)
     })
 
-    it('increment(\'newKey\', 5) results in value 5', () => {
+    it("increment('newKey', 5) results in value 5", () => {
       store.increment('newKey', 5)
       expect(store.get('newKey')).toBe(5)
     })
 
-    it('increment(\'newKey\', -3) results in value -3', () => {
+    it("increment('newKey', -3) results in value -3", () => {
       store.increment('newKey', -3)
       expect(store.get('newKey')).toBe(-3)
     })
@@ -746,12 +730,12 @@ describe('store.decrement(key, amount?)', () => {
       expect(store.get('newCount')).toBe(-5)
     })
 
-    it('decrement(\'newKey\') results in value -1', () => {
+    it("decrement('newKey') results in value -1", () => {
       store.decrement('newKey')
       expect(store.get('newKey')).toBe(-1)
     })
 
-    it('decrement(\'newKey\', 5) results in value -5', () => {
+    it("decrement('newKey', 5) results in value -5", () => {
       store.decrement('newKey', 5)
       expect(store.get('newKey')).toBe(-5)
     })
@@ -805,14 +789,14 @@ describe('store.all()', () => {
     expect(typeof all.str).toBe('string')
   })
 
-  it('returned object is a shallow copy (mutations don\'t affect store)', () => {
+  it("returned object is a shallow copy (mutations don't affect store)", () => {
     store.set('key', 'value')
     const all = store.all()
     all.key = 'modified'
     expect(store.get('key')).toBe('value')
   })
 
-  it('modifying returned object doesn\'t affect subsequent all() calls', () => {
+  it("modifying returned object doesn't affect subsequent all() calls", () => {
     store.set('key', 'value')
     const first = store.all()
     first.key = 'modified'
@@ -857,7 +841,7 @@ describe('store.keys()', () => {
     expect(keys).toEqual(['first', 'second', 'third'])
   })
 
-  it('returned array is a copy (mutations don\'t affect store)', () => {
+  it("returned array is a copy (mutations don't affect store)", () => {
     store.set('a', 1)
     const keys = store.keys()
     keys.push('b')

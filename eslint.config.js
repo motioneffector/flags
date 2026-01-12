@@ -5,6 +5,9 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   {
+    ignores: ['**/*.test.ts', '**/test-utils.ts', 'dist/**', 'node_modules/**'],
+  },
+  {
     languageOptions: {
       parserOptions: {
         projectService: true,

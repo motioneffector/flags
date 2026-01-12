@@ -12,18 +12,12 @@ describe('ValidationError', () => {
   })
 
   it('thrown for invalid value types', () => {
-    expect(() =>
-      createFlagStore({ initial: { key: null as any } })
-    ).toThrow(ValidationError)
-    expect(() =>
-      createFlagStore({ initial: { key: {} as any } })
-    ).toThrow(ValidationError)
-    expect(() =>
-      createFlagStore({ initial: { key: [] as any } })
-    ).toThrow(ValidationError)
+    expect(() => createFlagStore({ initial: { key: null as any } })).toThrow(ValidationError)
+    expect(() => createFlagStore({ initial: { key: {} as any } })).toThrow(ValidationError)
+    expect(() => createFlagStore({ initial: { key: [] as any } })).toThrow(ValidationError)
   })
 
-  it('has name \'ValidationError\'', () => {
+  it("has name 'ValidationError'", () => {
     try {
       createFlagStore({ initial: { key: null as any } })
     } catch (e) {
@@ -75,7 +69,7 @@ describe('ParseError', () => {
     expect(() => store.check('   ')).toThrow(ParseError)
   })
 
-  it('has name \'ParseError\'', () => {
+  it("has name 'ParseError'", () => {
     const store = createFlagStore()
 
     try {
@@ -86,7 +80,7 @@ describe('ParseError', () => {
     }
   })
 
-  it('has descriptive message indicating what\'s wrong', () => {
+  it("has descriptive message indicating what's wrong", () => {
     const store = createFlagStore()
 
     try {
