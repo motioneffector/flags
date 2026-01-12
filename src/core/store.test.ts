@@ -8,11 +8,21 @@ describe('createFlagStore(options?)', () => {
     it('creates empty store when called with no arguments', () => {
       const store = createFlagStore()
       expect(store).toBeDefined()
+      expect(typeof store.get).toBe('function')
+      expect(typeof store.set).toBe('function')
+      expect(typeof store.has).toBe('function')
+      expect(typeof store.delete).toBe('function')
+      expect(typeof store.clear).toBe('function')
     })
 
     it('creates empty store when called with empty options object', () => {
       const store = createFlagStore({})
       expect(store).toBeDefined()
+      expect(typeof store.get).toBe('function')
+      expect(typeof store.set).toBe('function')
+      expect(typeof store.has).toBe('function')
+      expect(typeof store.delete).toBe('function')
+      expect(typeof store.clear).toBe('function')
     })
 
     it('store.all() returns empty object for new empty store', () => {

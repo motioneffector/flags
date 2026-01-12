@@ -15,6 +15,11 @@ describe('store.namespace(prefix)', () => {
       expect(scoped).toBeDefined()
       expect(typeof scoped.get).toBe('function')
       expect(typeof scoped.set).toBe('function')
+      expect(typeof scoped.has).toBe('function')
+      expect(typeof scoped.delete).toBe('function')
+      expect(typeof scoped.clear).toBe('function')
+      expect(typeof scoped.all).toBe('function')
+      expect(typeof scoped.keys).toBe('function')
     })
 
     it("scoped.set('key', value) actually sets 'prefix.key' in root store", () => {

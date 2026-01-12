@@ -18,8 +18,10 @@ describe('ValidationError', () => {
   })
 
   it("has name 'ValidationError'", () => {
+    expect.assertions(2)
     try {
       createFlagStore({ initial: { key: null as any } })
+      throw new Error('Should have thrown ValidationError')
     } catch (e) {
       expect(e).toBeInstanceOf(Error)
       expect((e as Error).name).toBe('ValidationError')
@@ -27,9 +29,11 @@ describe('ValidationError', () => {
   })
 
   it('has descriptive message', () => {
+    expect.assertions(2)
     try {
       const store = createFlagStore()
       store.set('', 'value')
+      throw new Error('Should have thrown ValidationError')
     } catch (e) {
       expect((e as Error).message).toBeTruthy()
       expect((e as Error).message.length).toBeGreaterThan(10)
@@ -37,16 +41,20 @@ describe('ValidationError', () => {
   })
 
   it('instanceof ValidationError', () => {
+    expect.assertions(1)
     try {
       createFlagStore({ initial: { key: null as any } })
+      throw new Error('Should have thrown ValidationError')
     } catch (e) {
       expect(e).toBeInstanceOf(ValidationError)
     }
   })
 
   it('instanceof Error', () => {
+    expect.assertions(1)
     try {
       createFlagStore({ initial: { key: null as any } })
+      throw new Error('Should have thrown ValidationError')
     } catch (e) {
       expect(e).toBeInstanceOf(Error)
     }
@@ -72,8 +80,10 @@ describe('ParseError', () => {
   it("has name 'ParseError'", () => {
     const store = createFlagStore()
 
+    expect.assertions(2)
     try {
       store.check('')
+      throw new Error('Should have thrown ParseError')
     } catch (e) {
       expect(e).toBeInstanceOf(Error)
       expect((e as Error).name).toBe('ParseError')
@@ -83,8 +93,10 @@ describe('ParseError', () => {
   it("has descriptive message indicating what's wrong", () => {
     const store = createFlagStore()
 
+    expect.assertions(4)
     try {
       store.check('')
+      throw new Error('Should have thrown ParseError')
     } catch (e) {
       expect((e as Error).message).toBeTruthy()
       expect((e as Error).message).toContain('empty')
@@ -92,6 +104,7 @@ describe('ParseError', () => {
 
     try {
       store.check('(a AND b')
+      throw new Error('Should have thrown ParseError')
     } catch (e) {
       expect((e as Error).message).toBeTruthy()
       expect((e as Error).message.length).toBeGreaterThan(10)
@@ -101,8 +114,10 @@ describe('ParseError', () => {
   it('instanceof ParseError', () => {
     const store = createFlagStore()
 
+    expect.assertions(1)
     try {
       store.check('')
+      throw new Error('Should have thrown ParseError')
     } catch (e) {
       expect(e).toBeInstanceOf(ParseError)
     }
@@ -111,8 +126,10 @@ describe('ParseError', () => {
   it('instanceof Error', () => {
     const store = createFlagStore()
 
+    expect.assertions(1)
     try {
       store.check('')
+      throw new Error('Should have thrown ParseError')
     } catch (e) {
       expect(e).toBeInstanceOf(Error)
     }

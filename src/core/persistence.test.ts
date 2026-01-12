@@ -47,7 +47,9 @@ describe('Auto-Save (Decision 8.1: configurable, default auto)', () => {
     store.set('key', 'value')
 
     const saved = storage.getItem('@motioneffector/flags')
-    expect(saved).toBeTruthy()
+    expect(saved).not.toBeNull()
+    expect(typeof saved).toBe('string')
+    expect(saved).toContain('key')
   })
 
   it('state saved after set()', () => {
@@ -149,7 +151,9 @@ describe('Manual Save/Load', () => {
     store.save()
 
     const saved = storage.getItem('@motioneffector/flags')
-    expect(saved).toBeTruthy()
+    expect(saved).not.toBeNull()
+    expect(typeof saved).toBe('string')
+    expect(JSON.parse(saved!)).toEqual({ key: 'value' })
   })
 
   it('store.load() restores state from storage', () => {
@@ -197,14 +201,18 @@ describe('Storage Key (Decision 8.3: configurable with default)', () => {
     const store = createFlagStore({ persist: { storage } })
     store.set('key', 'value')
 
-    expect(storage.getItem('@motioneffector/flags')).toBeTruthy()
+    const saved = storage.getItem('@motioneffector/flags')
+    expect(saved).not.toBeNull()
+    expect(typeof saved).toBe('string')
   })
 
   it("custom key via { persist: { storage, key: 'custom' } }", () => {
     const store = createFlagStore({ persist: { storage, key: 'custom' } })
     store.set('key', 'value')
 
-    expect(storage.getItem('custom')).toBeTruthy()
+    const saved = storage.getItem('custom')
+    expect(saved).not.toBeNull()
+    expect(typeof saved).toBe('string')
     expect(storage.getItem('@motioneffector/flags')).toBeNull()
   })
 

@@ -265,7 +265,10 @@ describe('store.compute(key, dependencies, fn)', () => {
 
       expect(store.has('a')).toBe(false)
       expect(store.has('doubled')).toBe(true)
-      expect(store.get('doubled')).toBe(0) // or undefined, depending on implementation
+      // When dependency 'a' is cleared, it becomes undefined
+      // Implementation treats missing flags as 0 (Decision 5.3)
+      // So undefined is passed as 0: 0 * 2 = 0
+      expect(store.get('doubled')).toBe(0)
     })
   })
 
