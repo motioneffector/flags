@@ -26,7 +26,7 @@ const THOROUGH_MODE = process.env.FUZZ_THOROUGH === '1'
 const ITERATIONS = THOROUGH_MODE ? 0 : 200 // 0 means time-based
 // Configurable time budget via env var, default to 10s for thorough mode
 const TIME_BUDGET_MS = THOROUGH_MODE
-  ? (parseInt(process.env.FUZZ_TIME_BUDGET_MS || '10000', 10))
+  ? 10_000
   : 0
 
 /**
