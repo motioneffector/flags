@@ -1,5 +1,6 @@
 // Test Runner and Tests for the demo page
 import { createFlagStore, ValidationError, ParseError } from '../dist/index.js'
+import { runDemoPlayback } from './demo-playback.js'
 
 // ============================================
 // TEST RUNNER
@@ -85,6 +86,12 @@ const testRunner = {
 
     runBtn.disabled = false
     this.running = false
+
+    // After tests complete, run the demo playback
+    await new Promise(r => setTimeout(r, 1000)) // Brief pause before demo
+    progressText.textContent = 'Tests complete. Starting demo playback...'
+    await new Promise(r => setTimeout(r, 500))
+    await runDemoPlayback()
   }
 }
 
@@ -497,4 +504,11 @@ testRunner.register('rejects Infinity values', () => {
 
 export function initTests() {
   document.getElementById('run-tests').addEventListener('click', () => testRunner.run())
+  document.getElementById('reset-page').addEventListener('click', () => {
+    // Clear localStorage to get a truly fresh start
+    localStorage.removeItem('flags-demo')
+    localStorage.removeItem('demo-conditions')
+    // Reload the page
+    location.reload()
+  })
 }
