@@ -935,3 +935,102 @@ describe('store.setMany(object)', () => {
     expect(result).toBe(store)
   })
 })
+
+describe('Security: prototype pollution prevention', () => {
+  it('rejects __proto__ as flag key', () => {
+    const store = createFlagStore()
+    expect(() => store.set('__proto__', 'polluted')).toThrow(ValidationError)
+    expect(() => store.set('__proto__', 'polluted')).toThrow(/prototype property/)
+  })
+
+  it('rejects constructor as flag key', () => {
+    const store = createFlagStore()
+    expect(() => store.set('constructor', 'polluted')).toThrow(ValidationError)
+    expect(() => store.set('constructor', 'polluted')).toThrow(/prototype property/)
+  })
+
+  it('rejects prototype as flag key', () => {
+    const store = createFlagStore()
+    expect(() => store.set('prototype', 'polluted')).toThrow(ValidationError)
+    expect(() => store.set('prototype', 'polluted')).toThrow(/prototype property/)
+  })
+
+  it('filters __proto__ from JSON deserialization in loadFromStorage', () => {
+    const mockStorage = {
+      getItem: () => JSON.stringify({ __proto__: { polluted: true }, validKey: 'value' }),
+      setItem: () => {},
+      removeItem: () => {},
+    }
+    const store = createFlagStore({ persist: { storage: mockStorage } })
+
+    // __proto__ should not be loaded
+    expect(store.has('__proto__')).toBe(false)
+    // Valid key should be loaded
+    expect(store.get('validKey')).toBe('value')
+    // Prototype should not be polluted
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('filters constructor from JSON deserialization in loadFromStorage', () => {
+    const mockStorage = {
+      getItem: () => JSON.stringify({ constructor: { prototype: { polluted: true } }, validKey: 'value' }),
+      setItem: () => {},
+      removeItem: () => {},
+    }
+    const store = createFlagStore({ persist: { storage: mockStorage } })
+
+    expect(store.has('constructor')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('filters prototype from JSON deserialization in loadFromStorage', () => {
+    const mockStorage = {
+      getItem: () => JSON.stringify({ prototype: { polluted: true }, validKey: 'value' }),
+      setItem: () => {},
+      removeItem: () => {},
+    }
+    const store = createFlagStore({ persist: { storage: mockStorage } })
+
+    expect(store.has('prototype')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('filters dangerous keys in store.load() method', () => {
+    const mockStorage = {
+      getItem: () => JSON.stringify({ __proto__: { polluted: true }, constructor: 'bad', validKey: 'value' }),
+      setItem: () => {},
+      removeItem: () => {},
+    }
+    const store = createFlagStore({ persist: { storage: mockStorage, autoSave: false } }) as any
+
+    // Clear and manually load
+    store.clear()
+    store.load()
+
+    expect(store.has('__proto__')).toBe(false)
+    expect(store.has('constructor')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('handles __proto__ in setMany safely (JS ignores it in object literals)', () => {
+    const store = createFlagStore()
+    // JavaScript automatically filters __proto__ from Object.keys/entries
+    // This test verifies the behavior is safe
+    store.setMany({ __proto__: 'polluted' as any, validKey: 'value' })
+    expect(store.has('__proto__')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('handles __proto__ in initial values safely (JS ignores it in object literals)', () => {
+    // JavaScript automatically filters __proto__ from Object.keys/entries
+    // This test verifies the behavior is safe
+    const store = createFlagStore({ initial: { __proto__: 'polluted' as any, validKey: 'value' } })
+    expect(store.has('__proto__')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+})

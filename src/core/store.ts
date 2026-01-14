@@ -22,6 +22,11 @@ const DEFAULT_MAX_HISTORY = 100
 const RESERVED_WORDS = ['and', 'or', 'not']
 
 /**
+ * Forbidden keys that could cause prototype pollution
+ */
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
+
+/**
  * Operators that cannot appear in flag keys
  */
 const INVALID_KEY_PATTERNS = ['>', '<', '>=', '<=', '==', '!=', '!']
@@ -49,6 +54,14 @@ function validateKey(key: string): void {
 
   if (key.startsWith('!')) {
     throw new ValidationError(`Key cannot start with '!'. Received: "${key}"`, 'key')
+  }
+
+  // Check for prototype pollution
+  if (FORBIDDEN_KEYS.has(key)) {
+    throw new ValidationError(
+      `Key cannot be a prototype property (__proto__, constructor, prototype). Received: "${key}"`,
+      'key'
+    )
   }
 
   // Check for operators
@@ -340,7 +353,14 @@ export function createFlagStore(
       if (data === null) return
 
       const parsed = JSON.parse(data) as Record<string, FlagValue>
-      for (const [key, value] of Object.entries(parsed)) {
+      // Filter dangerous keys before iteration
+      for (const key of Object.keys(parsed)) {
+        // Skip prototype pollution keys
+        if (FORBIDDEN_KEYS.has(key)) continue
+        // Only process own properties
+        if (!Object.hasOwn(parsed, key)) continue
+
+        const value = parsed[key]
         validateKey(key)
         validateValue(value)
         state.set(key, value)
@@ -956,7 +976,13 @@ export function createFlagStore(
         state.clear()
 
         // Load new state
-        for (const [key, value] of Object.entries(parsed)) {
+        for (const key of Object.keys(parsed)) {
+          // Skip prototype pollution keys
+          if (FORBIDDEN_KEYS.has(key)) continue
+          // Only process own properties
+          if (!Object.hasOwn(parsed, key)) continue
+
+          const value = parsed[key]
           const oldValue = state.get(key)
           validateKey(key)
           validateValue(value)
