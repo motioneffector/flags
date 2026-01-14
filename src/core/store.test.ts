@@ -935,3 +935,205 @@ describe('store.setMany(object)', () => {
     expect(result).toBe(store)
   })
 })
+
+describe('Security: prototype pollution prevention', () => {
+  it('rejects __proto__ as flag key', () => {
+    const store = createFlagStore()
+    expect(() => store.set('__proto__', 'polluted')).toThrow(ValidationError)
+    expect(() => store.set('__proto__', 'polluted')).toThrow(/prototype property/)
+  })
+
+  it('rejects constructor as flag key', () => {
+    const store = createFlagStore()
+    expect(() => store.set('constructor', 'polluted')).toThrow(ValidationError)
+    expect(() => store.set('constructor', 'polluted')).toThrow(/prototype property/)
+  })
+
+  it('rejects prototype as flag key', () => {
+    const store = createFlagStore()
+    expect(() => store.set('prototype', 'polluted')).toThrow(ValidationError)
+    expect(() => store.set('prototype', 'polluted')).toThrow(/prototype property/)
+  })
+
+  it('filters __proto__ from JSON deserialization in loadFromStorage', () => {
+    const mockStorage = {
+      getItem: () => JSON.stringify({ __proto__: { polluted: true }, validKey: 'value' }),
+      setItem: () => {},
+      removeItem: () => {},
+    }
+    const store = createFlagStore({ persist: { storage: mockStorage } })
+
+    // __proto__ should not be loaded
+    expect(store.has('__proto__')).toBe(false)
+    // Valid key should be loaded
+    expect(store.get('validKey')).toBe('value')
+    // Prototype should not be polluted
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('filters constructor from JSON deserialization in loadFromStorage', () => {
+    const mockStorage = {
+      getItem: () => JSON.stringify({ constructor: { prototype: { polluted: true } }, validKey: 'value' }),
+      setItem: () => {},
+      removeItem: () => {},
+    }
+    const store = createFlagStore({ persist: { storage: mockStorage } })
+
+    expect(store.has('constructor')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('filters prototype from JSON deserialization in loadFromStorage', () => {
+    const mockStorage = {
+      getItem: () => JSON.stringify({ prototype: { polluted: true }, validKey: 'value' }),
+      setItem: () => {},
+      removeItem: () => {},
+    }
+    const store = createFlagStore({ persist: { storage: mockStorage } })
+
+    expect(store.has('prototype')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('filters dangerous keys in store.load() method', () => {
+    const mockStorage = {
+      getItem: () => JSON.stringify({ __proto__: { polluted: true }, constructor: 'bad', validKey: 'value' }),
+      setItem: () => {},
+      removeItem: () => {},
+    }
+    const store = createFlagStore({ persist: { storage: mockStorage, autoSave: false } }) as any
+
+    // Clear and manually load
+    store.clear()
+    store.load()
+
+    expect(store.has('__proto__')).toBe(false)
+    expect(store.has('constructor')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('handles __proto__ in setMany safely (JS ignores it in object literals)', () => {
+    const store = createFlagStore()
+    // JavaScript automatically filters __proto__ from Object.keys/entries
+    // This test verifies the behavior is safe
+    store.setMany({ __proto__: 'polluted' as any, validKey: 'value' })
+    expect(store.has('__proto__')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('handles __proto__ in initial values safely (JS ignores it in object literals)', () => {
+    // JavaScript automatically filters __proto__ from Object.keys/entries
+    // This test verifies the behavior is safe
+    const store = createFlagStore({ initial: { __proto__: 'polluted' as any, validKey: 'value' } })
+    expect(store.has('__proto__')).toBe(false)
+    expect(store.get('validKey')).toBe('value')
+    expect(({} as any).polluted).toBeUndefined()
+  })
+})
+
+describe('Security: integer overflow and bounds checking', () => {
+  it('rejects NaN values', () => {
+    const store = createFlagStore()
+    expect(() => store.set('key', NaN)).toThrow(ValidationError)
+    expect(() => store.set('key', NaN)).toThrow(/finite/)
+  })
+
+  it('rejects Infinity values', () => {
+    const store = createFlagStore()
+    expect(() => store.set('key', Infinity)).toThrow(ValidationError)
+    expect(() => store.set('key', Infinity)).toThrow(/finite/)
+  })
+
+  it('rejects -Infinity values', () => {
+    const store = createFlagStore()
+    expect(() => store.set('key', -Infinity)).toThrow(ValidationError)
+    expect(() => store.set('key', -Infinity)).toThrow(/finite/)
+  })
+
+  it('handles NaN in computed flags by converting to 0', () => {
+    const store = createFlagStore()
+    store.set('a', 1)
+    store.compute('result', ['a'], () => NaN)
+    expect(store.get('result')).toBe(0)
+  })
+
+  it('handles Infinity in computed flags by clamping to MAX_SAFE_INTEGER', () => {
+    const store = createFlagStore()
+    store.set('a', 1)
+    store.compute('result', ['a'], () => Infinity)
+    expect(store.get('result')).toBe(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('handles -Infinity in computed flags by clamping to MIN_SAFE_INTEGER', () => {
+    const store = createFlagStore()
+    store.set('a', 1)
+    store.compute('result', ['a'], () => -Infinity)
+    expect(store.get('result')).toBe(Number.MIN_SAFE_INTEGER)
+  })
+
+  it('allows maximum safe integers', () => {
+    const store = createFlagStore()
+    expect(() => store.set('key', Number.MAX_SAFE_INTEGER)).not.toThrow()
+    expect(() => store.set('key', Number.MIN_SAFE_INTEGER)).not.toThrow()
+  })
+})
+
+describe('Security: input length limits', () => {
+  it('rejects keys exceeding maximum length', () => {
+    const store = createFlagStore()
+    const longKey = 'a'.repeat(1001)
+    expect(() => store.set(longKey, true)).toThrow(ValidationError)
+    expect(() => store.set(longKey, true)).toThrow(/maximum length/)
+  })
+
+  it('accepts keys at maximum length', () => {
+    const store = createFlagStore()
+    const maxKey = 'a'.repeat(1000)
+    expect(() => store.set(maxKey, true)).not.toThrow()
+    expect(store.get(maxKey)).toBe(true)
+  })
+
+  it('rejects string values exceeding maximum length', () => {
+    const store = createFlagStore()
+    const longValue = 'a'.repeat(100_001)
+    expect(() => store.set('key', longValue)).toThrow(ValidationError)
+    expect(() => store.set('key', longValue)).toThrow(/maximum length/)
+  })
+
+  it('accepts string values at maximum length', () => {
+    const store = createFlagStore()
+    const maxValue = 'a'.repeat(100_000)
+    expect(() => store.set('key', maxValue)).not.toThrow()
+    expect(store.get('key')).toBe(maxValue)
+  })
+
+  it('rejects condition strings exceeding maximum length', () => {
+    const store = createFlagStore()
+    const longCondition = 'a and b and c'.repeat(1000)
+    expect(() => store.check(longCondition)).toThrow(ValidationError)
+    expect(() => store.check(longCondition)).toThrow(/maximum length/)
+  })
+
+  it('accepts condition strings at maximum length', () => {
+    const store = createFlagStore({ initial: { a: true } })
+    const maxCondition = 'a'.repeat(10_000)
+    // This will fail to parse but won't throw length error
+    expect(() => store.check(maxCondition)).not.toThrow(ValidationError)
+  })
+
+  it('enforces key length limit in setMany', () => {
+    const store = createFlagStore()
+    const longKey = 'a'.repeat(1001)
+    expect(() => store.setMany({ [longKey]: true })).toThrow(ValidationError)
+  })
+
+  it('enforces string value length limit in setMany', () => {
+    const store = createFlagStore()
+    const longValue = 'a'.repeat(100_001)
+    expect(() => store.setMany({ key: longValue })).toThrow(ValidationError)
+  })
+})

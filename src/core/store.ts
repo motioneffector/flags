@@ -15,11 +15,19 @@ import type {
 
 const DEFAULT_STORAGE_KEY = '@motioneffector/flags'
 const DEFAULT_MAX_HISTORY = 100
+const MAX_KEY_LENGTH = 1000
+const MAX_STRING_VALUE_LENGTH = 100_000
+const MAX_CONDITION_LENGTH = 10_000
 
 /**
  * Reserved words that cannot be used as flag keys
  */
 const RESERVED_WORDS = ['and', 'or', 'not']
+
+/**
+ * Forbidden keys that could cause prototype pollution
+ */
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 
 /**
  * Operators that cannot appear in flag keys
@@ -43,12 +51,27 @@ function validateKey(key: string): void {
     throw new ValidationError('Key cannot be empty', 'key')
   }
 
+  if (key.length > MAX_KEY_LENGTH) {
+    throw new ValidationError(
+      `Key exceeds maximum length of ${MAX_KEY_LENGTH}. Received length: ${key.length}`,
+      'key'
+    )
+  }
+
   if (key.includes(' ')) {
     throw new ValidationError(`Key cannot contain spaces. Received: "${key}"`, 'key')
   }
 
   if (key.startsWith('!')) {
     throw new ValidationError(`Key cannot start with '!'. Received: "${key}"`, 'key')
+  }
+
+  // Check for prototype pollution
+  if (FORBIDDEN_KEYS.has(key)) {
+    throw new ValidationError(
+      `Key cannot be a prototype property (__proto__, constructor, prototype). Received: "${key}"`,
+      'key'
+    )
   }
 
   // Check for operators
@@ -81,6 +104,27 @@ function validateValue(value: unknown): asserts value is FlagValue {
       `Value must be boolean, number, or string. Received: ${valueType}`,
       'value'
     )
+  }
+
+  // Validate numeric bounds
+  if (valueType === 'number') {
+    if (!Number.isFinite(value as number)) {
+      throw new ValidationError(
+        'Number values must be finite (not NaN, Infinity, or -Infinity)',
+        'value'
+      )
+    }
+  }
+
+  // Validate string length
+  if (valueType === 'string') {
+    const strValue = value as string
+    if (strValue.length > MAX_STRING_VALUE_LENGTH) {
+      throw new ValidationError(
+        `String value exceeds maximum length of ${MAX_STRING_VALUE_LENGTH}. Received length: ${strValue.length}`,
+        'value'
+      )
+    }
   }
 }
 
@@ -340,7 +384,14 @@ export function createFlagStore(
       if (data === null) return
 
       const parsed = JSON.parse(data) as Record<string, FlagValue>
-      for (const [key, value] of Object.entries(parsed)) {
+      // Filter dangerous keys before iteration
+      for (const key of Object.keys(parsed)) {
+        // Skip prototype pollution keys
+        if (FORBIDDEN_KEYS.has(key)) continue
+        // Only process own properties
+        if (!Object.hasOwn(parsed, key)) continue
+
+        const value = parsed[key]
         validateKey(key)
         validateValue(value)
         state.set(key, value)
@@ -361,9 +412,15 @@ export function createFlagStore(
       const depValues = computed.dependencies.map(dep => state.get(dep))
       let newValue = computed.fn(...depValues)
 
-      // Handle NaN by treating as 0
-      if (typeof newValue === 'number' && isNaN(newValue)) {
-        newValue = 0
+      // Validate and sanitize numeric results
+      if (typeof newValue === 'number') {
+        if (isNaN(newValue)) {
+          // Handle NaN by treating as 0
+          newValue = 0
+        } else if (!isFinite(newValue)) {
+          // Handle Infinity by clamping to max safe values
+          newValue = newValue > 0 ? Number.MAX_SAFE_INTEGER : Number.MIN_SAFE_INTEGER
+        }
       }
 
       const oldValue = state.get(key)
@@ -643,6 +700,12 @@ export function createFlagStore(
     },
 
     check(condition: string): boolean {
+      if (condition.length > MAX_CONDITION_LENGTH) {
+        throw new ValidationError(
+          `Condition exceeds maximum length of ${MAX_CONDITION_LENGTH}. Received length: ${condition.length}`,
+          'condition'
+        )
+      }
       return parseCondition(condition, key => store.get(key))
     },
 
@@ -956,7 +1019,13 @@ export function createFlagStore(
         state.clear()
 
         // Load new state
-        for (const [key, value] of Object.entries(parsed)) {
+        for (const key of Object.keys(parsed)) {
+          // Skip prototype pollution keys
+          if (FORBIDDEN_KEYS.has(key)) continue
+          // Only process own properties
+          if (!Object.hasOwn(parsed, key)) continue
+
+          const value = parsed[key]
           const oldValue = state.get(key)
           validateKey(key)
           validateValue(value)

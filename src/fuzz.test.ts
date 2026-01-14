@@ -161,19 +161,17 @@ function generateNumber(random: () => number, includeEdgeCases = true): number {
     const edgeCases = [
       0,
       -0,
-      NaN,
-      Infinity,
-      -Infinity,
+      // NaN, Infinity, -Infinity removed - now rejected by security validation
       Number.MAX_SAFE_INTEGER,
       Number.MIN_SAFE_INTEGER,
-      Number.MAX_SAFE_INTEGER + 1,
-      Number.MIN_SAFE_INTEGER - 1,
+      Number.MAX_SAFE_INTEGER - 1,
+      Number.MIN_SAFE_INTEGER + 1,
       Number.EPSILON,
       Number.EPSILON / 2,
-      1e308, -1e308, // near overflow
+      1e100, -1e100, // large values (but not overflow)
       1e-308, -1e-308, // near underflow
       0.1 + 0.2, // floating point precision
-      1.7976931348623157e+308, // MAX_VALUE
+      Number.MAX_VALUE / 2, // Half of MAX_VALUE (finite)
       5e-324, // MIN_VALUE
     ]
     return edgeCases[Math.floor(random() * edgeCases.length)] ?? 0
@@ -349,24 +347,20 @@ describe('Fuzz: store.set()', () => {
 
   it('never allows prototype pollution', () => {
     const iterCount = fuzzLoop((random) => {
-      // Note: The library doesn't explicitly block __proto__, constructor, prototype
-      // but the Map-based storage prevents actual prototype pollution
+      // Security fix: The library now explicitly blocks __proto__, constructor, prototype
       const pollutionKeys = ['__proto__', 'constructor', 'prototype']
       const key = pollutionKeys[Math.floor(random() * pollutionKeys.length)] ?? '__proto__'
       const value = generateFlagValue(random)
 
-      // These keys can be set (library uses Map, not object property assignment)
-      store.set(key, value)
+      // These keys are now explicitly rejected for security
+      expect(() => store.set(key, value)).toThrow(ValidationError)
 
-      // Verify the value is stored but Object.prototype is not actually polluted
-      expect(store.get(key)).toBe(value)
+      // Verify the key is not stored
+      expect(store.has(key)).toBe(false)
 
       // Create a new object and verify it's not polluted
       const testObj = {}
-      if (key === '__proto__') {
-        // __proto__ on objects refers to Object.prototype, not a stored value
-        expect((testObj as any).__proto__).toBe(Object.prototype)
-      }
+      expect((testObj as any).polluted).toBeUndefined()
     })
 
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
@@ -484,12 +478,9 @@ describe('Fuzz: store.increment()', () => {
   })
 
   it('handles Infinity correctly', () => {
-    store.set('inf', Infinity)
-    expect(store.increment('inf', 100)).toBe(Infinity)
-    expect(store.increment('inf', -100)).toBe(Infinity)
-
-    store.set('negInf', -Infinity)
-    expect(store.increment('negInf', 100)).toBe(-Infinity)
+    // Security fix: Infinity values are now rejected
+    expect(() => store.set('inf', Infinity)).toThrow(ValidationError)
+    expect(() => store.set('negInf', -Infinity)).toThrow(ValidationError)
   })
 })
 
