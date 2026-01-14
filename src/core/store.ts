@@ -15,6 +15,9 @@ import type {
 
 const DEFAULT_STORAGE_KEY = '@motioneffector/flags'
 const DEFAULT_MAX_HISTORY = 100
+const MAX_KEY_LENGTH = 1000
+const MAX_STRING_VALUE_LENGTH = 100_000
+const MAX_CONDITION_LENGTH = 10_000
 
 /**
  * Reserved words that cannot be used as flag keys
@@ -46,6 +49,13 @@ interface ComputedFlag {
 function validateKey(key: string): void {
   if (key === '') {
     throw new ValidationError('Key cannot be empty', 'key')
+  }
+
+  if (key.length > MAX_KEY_LENGTH) {
+    throw new ValidationError(
+      `Key exceeds maximum length of ${MAX_KEY_LENGTH}. Received length: ${key.length}`,
+      'key'
+    )
   }
 
   if (key.includes(' ')) {
@@ -94,6 +104,27 @@ function validateValue(value: unknown): asserts value is FlagValue {
       `Value must be boolean, number, or string. Received: ${valueType}`,
       'value'
     )
+  }
+
+  // Validate numeric bounds
+  if (valueType === 'number') {
+    if (!Number.isFinite(value as number)) {
+      throw new ValidationError(
+        'Number values must be finite (not NaN, Infinity, or -Infinity)',
+        'value'
+      )
+    }
+  }
+
+  // Validate string length
+  if (valueType === 'string') {
+    const strValue = value as string
+    if (strValue.length > MAX_STRING_VALUE_LENGTH) {
+      throw new ValidationError(
+        `String value exceeds maximum length of ${MAX_STRING_VALUE_LENGTH}. Received length: ${strValue.length}`,
+        'value'
+      )
+    }
   }
 }
 
@@ -381,9 +412,15 @@ export function createFlagStore(
       const depValues = computed.dependencies.map(dep => state.get(dep))
       let newValue = computed.fn(...depValues)
 
-      // Handle NaN by treating as 0
-      if (typeof newValue === 'number' && isNaN(newValue)) {
-        newValue = 0
+      // Validate and sanitize numeric results
+      if (typeof newValue === 'number') {
+        if (isNaN(newValue)) {
+          // Handle NaN by treating as 0
+          newValue = 0
+        } else if (!isFinite(newValue)) {
+          // Handle Infinity by clamping to max safe values
+          newValue = newValue > 0 ? Number.MAX_SAFE_INTEGER : Number.MIN_SAFE_INTEGER
+        }
       }
 
       const oldValue = state.get(key)
@@ -663,6 +700,12 @@ export function createFlagStore(
     },
 
     check(condition: string): boolean {
+      if (condition.length > MAX_CONDITION_LENGTH) {
+        throw new ValidationError(
+          `Condition exceeds maximum length of ${MAX_CONDITION_LENGTH}. Received length: ${condition.length}`,
+          'condition'
+        )
+      }
       return parseCondition(condition, key => store.get(key))
     },
 
