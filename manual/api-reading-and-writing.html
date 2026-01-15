@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading and Writing API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Reading and Writing API</h1>
+<p>Core methods for getting, setting, and manipulating flag values.</p>
+<hr>
+<h2><code>get()</code></h2>
+<p>Retrieves the value of a flag.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">get(key: string): FlagValue | undefined
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The flag key (trimmed automatically)</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>FlagValue | undefined</code> — The flag value, or <code>undefined</code> if the flag doesn&#39;t exist.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;gold&#39;, 100)
+store.get(&#39;gold&#39;)      // 100
+store.get(&#39;missing&#39;)   // undefined
+</code></pre>
+<hr>
+<h2><code>set()</code></h2>
+<p>Sets a flag to a specific value.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">set(key: string, value: FlagValue | null | undefined): FlagStore
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The flag key (trimmed automatically)</td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td><code>FlagValue | null | undefined</code></td>
+<td>Yes</td>
+<td>The value to set, or null/undefined to delete</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>FlagStore</code> — The store instance for chaining.</p>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If the key is empty, contains spaces, or is a reserved word (AND, OR, NOT)</li>
+<li><code>TypeError</code> — If the value is not boolean, number, or string</li>
+<li><code>Error</code> — If attempting to set a computed flag</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;gold&#39;, 100)
+store.set(&#39;name&#39;, &#39;Ada&#39;)
+store.set(&#39;active&#39;, true)
+
+// Chaining
+store.set(&#39;a&#39;, 1).set(&#39;b&#39;, 2).set(&#39;c&#39;, 3)
+
+// Delete by setting null/undefined
+store.set(&#39;gold&#39;, null)
+</code></pre>
+<hr>
+<h2><code>has()</code></h2>
+<p>Checks if a flag exists in the store.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">has(key: string): boolean
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The flag key (trimmed automatically)</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>boolean</code> — <code>true</code> if the flag exists, <code>false</code> otherwise.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;gold&#39;, 100)
+store.has(&#39;gold&#39;)      // true
+store.has(&#39;missing&#39;)   // false
+</code></pre>
+<hr>
+<h2><code>delete()</code></h2>
+<p>Deletes a flag from the store.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">delete(key: string): FlagStore
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The flag key to delete (trimmed automatically)</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>FlagStore</code> — The store instance for chaining.</p>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>Error</code> — If attempting to delete a computed flag</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;gold&#39;, 100)
+store.delete(&#39;gold&#39;)
+store.has(&#39;gold&#39;)      // false
+</code></pre>
+<hr>
+<h2><code>clear()</code></h2>
+<p>Deletes all flags from the store.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">clear(): FlagStore
+</code></pre>
+<p><strong>Returns:</strong> <code>FlagStore</code> — The store instance for chaining.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;a&#39;, 1)
+store.set(&#39;b&#39;, 2)
+store.clear()
+store.keys()           // []
+</code></pre>
+<p>Note: Computed flag definitions are preserved (but their values update based on cleared dependencies).</p>
+<hr>
+<h2><code>toggle()</code></h2>
+<p>Toggles a boolean flag.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">toggle(key: string): boolean
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The flag key (trimmed automatically)</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>boolean</code> — The new value after toggling.</p>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If the key is invalid</li>
+<li><code>TypeError</code> — If the flag exists and is not a boolean</li>
+<li><code>Error</code> — If attempting to toggle a computed flag</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;dark_mode&#39;, false)
+store.toggle(&#39;dark_mode&#39;)  // true
+store.toggle(&#39;dark_mode&#39;)  // false
+
+// Creates flag if missing (defaults to true)
+store.toggle(&#39;new_flag&#39;)   // true
+</code></pre>
+<hr>
+<h2><code>increment()</code></h2>
+<p>Increments a numeric flag by a specified amount.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">increment(key: string, amount?: number): number
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The flag key (trimmed automatically)</td>
+</tr>
+<tr>
+<td><code>amount</code></td>
+<td><code>number</code></td>
+<td>No</td>
+<td>Amount to increment by. Default: <code>1</code></td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>number</code> — The new value after incrementing.</p>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If the key is invalid</li>
+<li><code>TypeError</code> — If the flag exists and is not a number</li>
+<li><code>Error</code> — If attempting to increment a computed flag</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;count&#39;, 10)
+store.increment(&#39;count&#39;)      // 11
+store.increment(&#39;count&#39;, 5)   // 16
+
+// Creates flag if missing (initializes to amount)
+store.increment(&#39;new&#39;, 100)   // 100
+</code></pre>
+<hr>
+<h2><code>decrement()</code></h2>
+<p>Decrements a numeric flag by a specified amount.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">decrement(key: string, amount?: number): number
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The flag key (trimmed automatically)</td>
+</tr>
+<tr>
+<td><code>amount</code></td>
+<td><code>number</code></td>
+<td>No</td>
+<td>Amount to decrement by. Default: <code>1</code></td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>number</code> — The new value after decrementing.</p>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If the key is invalid</li>
+<li><code>TypeError</code> — If the flag exists and is not a number</li>
+<li><code>Error</code> — If attempting to decrement a computed flag</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;health&#39;, 100)
+store.decrement(&#39;health&#39;)      // 99
+store.decrement(&#39;health&#39;, 25)  // 74
+
+// Creates flag if missing (initializes to -amount)
+store.decrement(&#39;new&#39;, 5)      // -5
+</code></pre>
+<hr>
+<h2><code>all()</code></h2>
+<p>Gets all flags in the store as a plain object.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">all(): Record&lt;string, FlagValue&gt;
+</code></pre>
+<p><strong>Returns:</strong> <code>Record&lt;string, FlagValue&gt;</code> — An object with all flag keys and their values.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;a&#39;, 1)
+store.set(&#39;b&#39;, &#39;hello&#39;)
+store.all()  // { a: 1, b: &#39;hello&#39; }
+</code></pre>
+<hr>
+<h2><code>keys()</code></h2>
+<p>Gets all flag keys in the store.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">keys(): string[]
+</code></pre>
+<p><strong>Returns:</strong> <code>string[]</code> — An array of flag keys.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;gold&#39;, 100)
+store.set(&#39;level&#39;, 5)
+store.keys()  // [&#39;gold&#39;, &#39;level&#39;]
+</code></pre>
+<hr>
+<h2><code>setMany()</code></h2>
+<p>Sets multiple flags at once.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">setMany(values: Record&lt;string, FlagValue | null | undefined&gt;): FlagStore
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>values</code></td>
+<td><code>Record&lt;string, FlagValue | null | undefined&gt;</code></td>
+<td>Yes</td>
+<td>Object with flag keys and values</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>FlagStore</code> — The store instance for chaining.</p>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If any key is invalid</li>
+<li><code>TypeError</code> — If any value type is not allowed</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.setMany({
+  gold: 100,
+  level: 5,
+  name: &#39;Ada&#39;
+})
+</code></pre>
+<p>Note: All keys are validated before any values are set. If validation fails, no changes are made.</p>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

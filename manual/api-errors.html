@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Errors API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Errors API</h1>
+<p>Error classes thrown by the flag store.</p>
+<hr>
+<h2><code>FlagsError</code></h2>
+<p>Base error class for all library errors.</p>
+<pre><code class="language-typescript">class FlagsError extends Error {
+  name: &#39;FlagsError&#39;
+}
+</code></pre>
+<p>All errors from this library extend <code>FlagsError</code>, so you can catch them all:</p>
+<pre><code class="language-typescript">import { FlagsError } from &#39;@motioneffector/flags&#39;
+
+try {
+  store.check(&#39;invalid syntax ((&#39;)
+} catch (e) {
+  if (e instanceof FlagsError) {
+    console.log(&#39;Flag store error:&#39;, e.message)
+  }
+}
+</code></pre>
+<hr>
+<h2><code>ValidationError</code></h2>
+<p>Thrown when a flag key or value fails validation.</p>
+<pre><code class="language-typescript">class ValidationError extends FlagsError {
+  name: &#39;ValidationError&#39;
+  field?: string
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>message</code></td>
+<td><code>string</code></td>
+<td>Description of the validation failure</td>
+</tr>
+<tr>
+<td><code>field</code></td>
+<td><code>string | undefined</code></td>
+<td>The field that failed validation (if applicable)</td>
+</tr>
+</tbody></table>
+<h3>When Thrown</h3>
+<p><strong>Invalid key:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;&#39;, &#39;value&#39;)
+// ValidationError: Flag key cannot be empty
+
+store.set(&#39;has spaces&#39;, &#39;value&#39;)
+// ValidationError: Flag key cannot contain spaces
+
+store.set(&#39;AND&#39;, &#39;value&#39;)
+// ValidationError: Flag key cannot be a reserved word
+
+store.set(&#39;OR&#39;, &#39;value&#39;)
+// ValidationError: Flag key cannot be a reserved word
+
+store.set(&#39;NOT&#39;, &#39;value&#39;)
+// ValidationError: Flag key cannot be a reserved word
+</code></pre>
+<p><strong>Invalid value type:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;key&#39;, { object: true })
+// TypeError: Flag value must be boolean, number, or string
+
+store.set(&#39;key&#39;, [1, 2, 3])
+// TypeError: Flag value must be boolean, number, or string
+</code></pre>
+<p><strong>Type mismatch in operations:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;name&#39;, &#39;Alice&#39;)
+store.toggle(&#39;name&#39;)
+// TypeError: Cannot toggle non-boolean flag
+
+store.increment(&#39;name&#39;)
+// TypeError: Cannot increment non-numeric flag
+</code></pre>
+<hr>
+<h2><code>ParseError</code></h2>
+<p>Thrown when a condition expression has invalid syntax.</p>
+<pre><code class="language-typescript">class ParseError extends FlagsError {
+  name: &#39;ParseError&#39;
+  position?: number
+  input?: string
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>message</code></td>
+<td><code>string</code></td>
+<td>Description of the parse error</td>
+</tr>
+<tr>
+<td><code>position</code></td>
+<td><code>number | undefined</code></td>
+<td>Character position where the error occurred</td>
+</tr>
+<tr>
+<td><code>input</code></td>
+<td><code>string | undefined</code></td>
+<td>The input string that failed to parse</td>
+</tr>
+</tbody></table>
+<h3>When Thrown</h3>
+<p><strong>Empty condition:</strong></p>
+<pre><code class="language-typescript">store.check(&#39;&#39;)
+// ParseError: Condition cannot be empty
+
+store.check(&#39;   &#39;)
+// ParseError: Condition cannot be empty
+</code></pre>
+<p><strong>Incomplete expression:</strong></p>
+<pre><code class="language-typescript">store.check(&#39;a AND&#39;)
+// ParseError: Unexpected end of expression
+
+store.check(&#39;AND b&#39;)
+// ParseError: Unexpected token &#39;AND&#39;
+
+store.check(&#39;a ==&#39;)
+// ParseError: Expected value after operator
+</code></pre>
+<p><strong>Unbalanced parentheses:</strong></p>
+<pre><code class="language-typescript">store.check(&#39;(a AND b&#39;)
+// ParseError: Unclosed parenthesis
+
+store.check(&#39;a AND b)&#39;)
+// ParseError: Unexpected closing parenthesis
+
+store.check(&#39;()&#39;)
+// ParseError: Empty parentheses
+</code></pre>
+<p><strong>Invalid operators:</strong></p>
+<pre><code class="language-typescript">store.check(&#39;a &gt;&gt; 5&#39;)
+// ParseError: Invalid operator &#39;&gt;&gt;&#39;
+
+store.check(&#39;a === 5&#39;)
+// ParseError: Invalid operator &#39;===&#39;
+</code></pre>
+<p><strong>String ordering:</strong></p>
+<pre><code class="language-typescript">store.check(&#39;name &gt; &quot;alice&quot;&#39;)
+// ParseError: Ordering operators not supported for strings
+</code></pre>
+<hr>
+<h2>Error Handling Patterns</h2>
+<h3>Catching All Library Errors</h3>
+<pre><code class="language-typescript">import { FlagsError, ValidationError, ParseError } from &#39;@motioneffector/flags&#39;
+
+try {
+  store.set(userInput.key, userInput.value)
+  store.check(userInput.condition)
+} catch (e) {
+  if (e instanceof ValidationError) {
+    console.error(&#39;Invalid input:&#39;, e.message)
+  } else if (e instanceof ParseError) {
+    console.error(&#39;Invalid condition:&#39;, e.message)
+  } else if (e instanceof FlagsError) {
+    console.error(&#39;Store error:&#39;, e.message)
+  } else {
+    throw e  // Re-throw unknown errors
+  }
+}
+</code></pre>
+<h3>Validating User Input</h3>
+<pre><code class="language-typescript">function isValidCondition(condition: string): boolean {
+  try {
+    store.check(condition)
+    return true
+  } catch (e) {
+    if (e instanceof ParseError) {
+      return false
+    }
+    throw e
+  }
+}
+</code></pre>
+<h3>Graceful Degradation</h3>
+<pre><code class="language-typescript">function safeCheck(condition: string, fallback = false): boolean {
+  try {
+    return store.check(condition)
+  } catch (e) {
+    console.warn(&#39;Invalid condition:&#39;, condition, e)
+    return fallback
+  }
+}
+</code></pre>
+<hr>
+<h2>Errors That Are NOT Thrown</h2>
+<p>Some error conditions are handled gracefully without throwing:</p>
+<h3>Storage Errors</h3>
+<pre><code class="language-typescript">// Storage failures are logged, not thrown
+const store = createFlagStore({
+  persist: { storage: failingStorage }
+})
+// Works in-memory, logs error to console.error
+</code></pre>
+<h3>Missing Flags</h3>
+<pre><code class="language-typescript">// Missing flags return undefined, not an error
+store.get(&#39;nonexistent&#39;)  // undefined
+
+// In conditions, missing flags are 0/falsy
+store.check(&#39;missing&#39;)  // false (no error)
+</code></pre>
+<h3>Subscriber Errors</h3>
+<pre><code class="language-typescript">// Errors in subscribers are caught and logged
+store.subscribe(() =&gt; { throw new Error(&#39;Oops&#39;) })
+store.set(&#39;x&#39;, 1)  // Still works, error logged to console.error
+</code></pre>
+<h3>Compute Function Errors</h3>
+<pre><code class="language-typescript">// Errors in compute functions are caught
+store.compute(&#39;result&#39;, [&#39;x&#39;], () =&gt; { throw new Error(&#39;Oops&#39;) })
+store.get(&#39;result&#39;)  // Returns previous value, error logged
+</code></pre>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Operations - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Batch Operations</h1>
+<p>Group multiple changes into a single atomic operation. Subscribers are notified once at the end, and with history enabled, the entire batch becomes one undo step.</p>
+<h2>Prerequisites</h2>
+<p>Before starting, you should:</p>
+<ul>
+<li><a href="concept-subscriptions.html">Understand Subscriptions</a></li>
+<li>Optionally, <a href="guide-undo-redo-history.html">Understand Undo/Redo History</a></li>
+</ul>
+<h2>Overview</h2>
+<p>We&#39;ll use batch operations to:</p>
+<ol>
+<li>Group changes for single notification</li>
+<li>Create atomic undo steps</li>
+<li>Handle errors with automatic rollback</li>
+</ol>
+<h2>Step 1: Basic Batching</h2>
+<p>Wrap multiple operations in <code>batch()</code>:</p>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore()
+
+store.subscribe(() =&gt; {
+  console.log(&#39;Store changed&#39;)
+})
+
+// Without batch: 3 notifications
+store.set(&#39;a&#39;, 1)  // &quot;Store changed&quot;
+store.set(&#39;b&#39;, 2)  // &quot;Store changed&quot;
+store.set(&#39;c&#39;, 3)  // &quot;Store changed&quot;
+
+// With batch: 1 notification
+store.batch(() =&gt; {
+  store.set(&#39;x&#39;, 1)
+  store.set(&#39;y&#39;, 2)
+  store.set(&#39;z&#39;, 3)
+})  // &quot;Store changed&quot; (once)
+</code></pre>
+<h2>Step 2: Batch with History</h2>
+<p>With history enabled, a batch becomes one undo step:</p>
+<pre><code class="language-typescript">const store = createFlagStore({ history: true })
+
+store.set(&#39;score&#39;, 0)
+
+store.batch(() =&gt; {
+  store.increment(&#39;score&#39;, 10)
+  store.increment(&#39;score&#39;, 20)
+  store.increment(&#39;score&#39;, 30)
+})
+
+store.get(&#39;score&#39;)  // 60
+
+// Single undo reverts the entire batch
+store.undo()
+store.get(&#39;score&#39;)  // 0
+</code></pre>
+<h2>Step 3: Handle Errors</h2>
+<p>If an error occurs inside <code>batch()</code>, all changes are rolled back:</p>
+<pre><code class="language-typescript">const store = createFlagStore()
+store.set(&#39;count&#39;, 0)
+
+try {
+  store.batch(() =&gt; {
+    store.set(&#39;count&#39;, 100)
+    store.set(&#39;name&#39;, &#39;test&#39;)
+    throw new Error(&#39;Something went wrong&#39;)
+  })
+} catch (e) {
+  // Error propagates
+}
+
+// State is unchanged
+store.get(&#39;count&#39;)  // 0
+store.has(&#39;name&#39;)   // false
+</code></pre>
+<p>No notifications fire when a batch errors.</p>
+<h2>Complete Example</h2>
+<pre><code class="language-typescript">import { createFlagStore, FlagStoreWithHistory } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: {
+    player_health: 100,
+    player_gold: 0,
+    enemy_health: 50
+  },
+  history: true
+}) as FlagStoreWithHistory
+
+// Subscribe to see notification count
+let notificationCount = 0
+store.subscribe(() =&gt; notificationCount++)
+
+// Combat round as a batch
+store.batch(() =&gt; {
+  // Player attacks enemy
+  store.decrement(&#39;enemy_health&#39;, 25)
+
+  // Enemy attacks player
+  store.decrement(&#39;player_health&#39;, 10)
+
+  // Player loots gold
+  store.increment(&#39;player_gold&#39;, 15)
+})
+
+console.log(notificationCount)  // 1 (not 3)
+
+// Undo the entire combat round
+store.undo()
+console.log(store.get(&#39;player_health&#39;))  // 100
+console.log(store.get(&#39;enemy_health&#39;))   // 50
+console.log(store.get(&#39;player_gold&#39;))    // 0
+</code></pre>
+<h2>Variations</h2>
+<h3>Nested Batches</h3>
+<p>Nested batches are flattened into the outermost batch:</p>
+<pre><code class="language-typescript">store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+
+  store.batch(() =&gt; {
+    store.set(&#39;b&#39;, 2)
+  })  // No notification here
+
+  store.set(&#39;c&#39;, 3)
+})  // Single notification here
+</code></pre>
+<h3>Batch Return Value</h3>
+<p><code>batch()</code> returns whatever your function returns:</p>
+<pre><code class="language-typescript">const result = store.batch(() =&gt; {
+  store.set(&#39;gold&#39;, 100)
+  return store.get(&#39;gold&#39;)
+})
+
+console.log(result)  // 100
+</code></pre>
+<h3>Batch with Key Subscriptions</h3>
+<p>Key-specific subscriptions fire once per affected key:</p>
+<pre><code class="language-typescript">store.subscribeKey(&#39;a&#39;, () =&gt; console.log(&#39;a changed&#39;))
+store.subscribeKey(&#39;b&#39;, () =&gt; console.log(&#39;b changed&#39;))
+
+store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+})
+// Logs: &quot;a changed&quot;
+// Logs: &quot;b changed&quot;
+// (each once, after batch completes)
+</code></pre>
+<h3>Batch with Persistence</h3>
+<p>Batched changes are saved once at the end:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: { storage: localStorage }
+})
+
+store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+  store.set(&#39;c&#39;, 3)
+})  // Single save to localStorage
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>Changes Not Rolled Back</h3>
+<p><strong>Symptom:</strong> Error in batch but changes persist.</p>
+<p><strong>Cause:</strong> Error occurred outside the batch function.</p>
+<p><strong>Solution:</strong> Ensure the throwing code is inside the <code>batch()</code> callback.</p>
+<h3>Too Many Notifications</h3>
+<p><strong>Symptom:</strong> Subscribers fire multiple times during batch.</p>
+<p><strong>Cause:</strong> You&#39;re not inside a batch, or using nested stores.</p>
+<p><strong>Solution:</strong> Wrap all related changes in a single <code>batch()</code> call.</p>
+<h3>Nested Batch Confusion</h3>
+<p><strong>Symptom:</strong> Inner batch seems to trigger notifications.</p>
+<p><strong>Cause:</strong> Misunderstanding - nested batches don&#39;t trigger until outermost completes.</p>
+<p><strong>Solution:</strong> This is expected. Only the outermost batch triggers notifications.</p>
+<h2>See Also</h2>
+<ul>
+<li><strong><a href="concept-subscriptions.html">Subscriptions</a></strong> - How notifications work</li>
+<li><strong><a href="guide-undo-redo-history.html">Undo/Redo History</a></strong> - Batches as undo steps</li>
+<li><strong><a href="api-batch-operations.html">API: Batch Operations</a></strong> - Full method reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

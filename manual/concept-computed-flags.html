@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Computed Flags - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Computed Flags</h1>
+<p>Computed flags are derived values that automatically update when their dependencies change. Define a formula once, and the store keeps it up to date.</p>
+<h2>How It Works</h2>
+<p>You declare a computed flag with <code>compute()</code>, specifying which flags it depends on and a function to calculate the value. Whenever any dependency changes, the store recalculates and updates the computed flag.</p>
+<pre><code>Dependencies: gold, bonus_multiplier
+Formula: gold * bonus_multiplier
+
+┌─────────────────────────────────┐
+│           Flag Store            │
+│  gold: 100                      │
+│  bonus_multiplier: 1.5          │
+│  total_gold: 150  (computed)    │
+└─────────────────────────────────┘
+
+store.set(&#39;gold&#39;, 200)
+        ↓
+   Recalculate total_gold
+        ↓
+   total_gold = 200 * 1.5 = 300
+</code></pre>
+<h2>Basic Usage</h2>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: { base_damage: 10, strength: 5 }
+})
+
+// Define a computed flag
+store.compute(&#39;total_damage&#39;, [&#39;base_damage&#39;, &#39;strength&#39;], (baseDamage, strength) =&gt; {
+  return (baseDamage as number) + (strength as number) * 2
+})
+
+// Read the computed value
+store.get(&#39;total_damage&#39;)  // 20 (10 + 5*2)
+
+// Change a dependency
+store.set(&#39;strength&#39;, 10)
+store.get(&#39;total_damage&#39;)  // 30 (10 + 10*2)
+</code></pre>
+<p>The computed flag updates automatically. You never set it directly.</p>
+<h2>Key Points</h2>
+<ul>
+<li><p><strong>Read-only</strong> - Computed flags cannot be set, deleted, toggled, or incremented. Attempting to do so throws an error.</p>
+</li>
+<li><p><strong>Synchronous only</strong> - The compute function must return immediately. Async functions return a Promise object, not the resolved value.</p>
+</li>
+<li><p><strong>Dependencies can be missing</strong> - If a dependency doesn&#39;t exist, it&#39;s passed as <code>undefined</code>. Handle this in your function.</p>
+</li>
+<li><p><strong>Circular dependencies throw</strong> - If flag A depends on B and B depends on A, you get an error at definition time.</p>
+</li>
+<li><p><strong>Trigger subscriptions</strong> - When a computed flag&#39;s value changes, subscribers are notified just like regular flags.</p>
+</li>
+</ul>
+<h2>Examples</h2>
+<h3>Derived Stats</h3>
+<pre><code class="language-typescript">store.set(&#39;base_health&#39;, 100)
+store.set(&#39;armor&#39;, 50)
+
+store.compute(&#39;effective_health&#39;, [&#39;base_health&#39;, &#39;armor&#39;], (health, armor) =&gt; {
+  return (health as number) + (armor as number) * 0.5
+})
+
+store.get(&#39;effective_health&#39;)  // 125
+</code></pre>
+<h3>Boolean Combinations</h3>
+<pre><code class="language-typescript">store.set(&#39;is_admin&#39;, false)
+store.set(&#39;is_moderator&#39;, true)
+
+store.compute(&#39;can_ban_users&#39;, [&#39;is_admin&#39;, &#39;is_moderator&#39;], (admin, mod) =&gt; {
+  return admin === true || mod === true
+})
+
+store.get(&#39;can_ban_users&#39;)  // true
+</code></pre>
+<h3>Using Computed Flags in Conditions</h3>
+<p>Computed flags work in <code>check()</code> just like regular flags:</p>
+<pre><code class="language-typescript">store.set(&#39;level&#39;, 10)
+store.set(&#39;has_premium&#39;, true)
+
+store.compute(&#39;max_inventory&#39;, [&#39;level&#39;, &#39;has_premium&#39;], (level, premium) =&gt; {
+  const base = 10 + (level as number)
+  return premium ? base * 2 : base
+})
+
+// Use in conditions
+store.check(&#39;max_inventory &gt;= 30&#39;)  // true (10 + 10) * 2 = 40
+</code></pre>
+<h3>Handling Missing Dependencies</h3>
+<pre><code class="language-typescript">store.compute(&#39;safe_value&#39;, [&#39;maybe_missing&#39;], (value) =&gt; {
+  return value ?? 0  // Default to 0 if undefined
+})
+
+store.get(&#39;safe_value&#39;)  // 0 (maybe_missing doesn&#39;t exist)
+
+store.set(&#39;maybe_missing&#39;, 42)
+store.get(&#39;safe_value&#39;)  // 42
+</code></pre>
+<h2>Subscribing to Computed Flags</h2>
+<p>Subscribe to computed flags like any other:</p>
+<pre><code class="language-typescript">store.subscribeKey(&#39;total_damage&#39;, (newValue, oldValue) =&gt; {
+  console.log(`Damage changed: ${oldValue} -&gt; ${newValue}`)
+})
+
+store.set(&#39;strength&#39;, 15)  // Triggers the subscription
+</code></pre>
+<h2>Related</h2>
+<ul>
+<li><strong><a href="concept-subscriptions.html">Subscriptions</a></strong> - React to computed value changes</li>
+<li><strong><a href="concept-condition-expressions.html">Condition Expressions</a></strong> - Use computed flags in conditions</li>
+<li><strong><a href="api-computed-flags.html">API: Computed Flags</a></strong> - Full method reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

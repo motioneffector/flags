@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Store Creation API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Store Creation API</h1>
+<p>Create and configure flag stores.</p>
+<hr>
+<h2><code>createFlagStore()</code></h2>
+<p>Creates a new flag store with optional initial values, persistence, and history tracking.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">function createFlagStore(options?: FlagStoreOptions): FlagStore
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>options</code></td>
+<td><code>FlagStoreOptions</code></td>
+<td>No</td>
+<td>Configuration options for the store</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>FlagStore</code> — A new flag store instance. If history or persistence options are provided, the returned store also implements <code>FlagStoreWithHistory</code> or <code>FlagStoreWithPersistence</code>.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+// Basic store
+const store = createFlagStore()
+
+// With initial values
+const store = createFlagStore({
+  initial: { gold: 0, level: 1, name: &#39;Hero&#39; }
+})
+
+// With persistence
+const store = createFlagStore({
+  persist: { storage: localStorage }
+})
+
+// With history
+const store = createFlagStore({
+  history: true
+})
+
+// Full configuration
+const store = createFlagStore({
+  initial: { gold: 0 },
+  persist: { storage: localStorage, key: &#39;my-app&#39;, autoSave: true },
+  history: { maxHistory: 50 }
+})
+</code></pre>
+<hr>
+<h2>Types</h2>
+<h3><code>FlagStoreOptions</code></h3>
+<pre><code class="language-typescript">interface FlagStoreOptions {
+  initial?: Record&lt;string, FlagValue&gt;
+  persist?: PersistOptions
+  history?: boolean | HistoryOptions
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>initial</code></td>
+<td><code>Record&lt;string, FlagValue&gt;</code></td>
+<td>No</td>
+<td>Initial flag values. All values must be boolean, number, or string.</td>
+</tr>
+<tr>
+<td><code>persist</code></td>
+<td><code>PersistOptions</code></td>
+<td>No</td>
+<td>Persistence configuration. If provided, state is saved/loaded automatically.</td>
+</tr>
+<tr>
+<td><code>history</code></td>
+<td><code>boolean | HistoryOptions</code></td>
+<td>No</td>
+<td>Enable undo/redo. Pass <code>true</code> for defaults or an options object.</td>
+</tr>
+</tbody></table>
+<h3><code>PersistOptions</code></h3>
+<pre><code class="language-typescript">interface PersistOptions {
+  storage: Storage
+  key?: string
+  autoSave?: boolean
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>storage</code></td>
+<td><code>Storage</code></td>
+<td>Yes</td>
+<td>Storage backend (e.g., <code>localStorage</code>, <code>sessionStorage</code>).</td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>Storage key. Default: <code>&#39;@motioneffector/flags&#39;</code>.</td>
+</tr>
+<tr>
+<td><code>autoSave</code></td>
+<td><code>boolean</code></td>
+<td>No</td>
+<td>Auto-save on changes. Default: <code>true</code>.</td>
+</tr>
+</tbody></table>
+<h3><code>HistoryOptions</code></h3>
+<pre><code class="language-typescript">interface HistoryOptions {
+  maxHistory?: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>maxHistory</code></td>
+<td><code>number</code></td>
+<td>No</td>
+<td>Maximum history entries. Default: <code>100</code>.</td>
+</tr>
+</tbody></table>
+<h3><code>Storage</code></h3>
+<pre><code class="language-typescript">interface Storage {
+  getItem(key: string): string | null
+  setItem(key: string, value: string): void
+  removeItem(key: string): void
+}
+</code></pre>
+<p>The standard Web Storage interface. <code>localStorage</code> and <code>sessionStorage</code> both implement this.</p>
+<h3><code>FlagValue</code></h3>
+<pre><code class="language-typescript">type FlagValue = boolean | number | string
+</code></pre>
+<p>Valid types for flag values. Objects, arrays, null, and undefined are not allowed as stored values.</p>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

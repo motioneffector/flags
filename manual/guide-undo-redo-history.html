@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Undo/Redo History - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Undo/Redo History</h1>
+<p>Add time-travel debugging to your application. Every change is recorded, letting users undo mistakes and redo actions.</p>
+<h2>Prerequisites</h2>
+<p>Before starting, you should:</p>
+<ul>
+<li><a href="concept-flag-store.html">Understand how the Flag Store works</a></li>
+</ul>
+<h2>Overview</h2>
+<p>We&#39;ll implement undo/redo by:</p>
+<ol>
+<li>Enabling history on the store</li>
+<li>Using <code>undo()</code> and <code>redo()</code> methods</li>
+<li>Checking <code>canUndo()</code> and <code>canRedo()</code> for UI state</li>
+<li>Configuring history depth</li>
+</ol>
+<h2>Step 1: Enable History</h2>
+<p>Pass <code>history: true</code> when creating the store:</p>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: { count: 0 },
+  history: true
+})
+</code></pre>
+<p>The store now tracks every change. The returned store has <code>undo()</code>, <code>redo()</code>, <code>canUndo()</code>, <code>canRedo()</code>, and <code>clearHistory()</code> methods.</p>
+<h2>Step 2: Undo and Redo Changes</h2>
+<p>Call <code>undo()</code> to revert the last change, <code>redo()</code> to restore it:</p>
+<pre><code class="language-typescript">store.set(&#39;count&#39;, 1)
+store.set(&#39;count&#39;, 2)
+store.set(&#39;count&#39;, 3)
+
+store.get(&#39;count&#39;)  // 3
+
+store.undo()
+store.get(&#39;count&#39;)  // 2
+
+store.undo()
+store.get(&#39;count&#39;)  // 1
+
+store.redo()
+store.get(&#39;count&#39;)  // 2
+</code></pre>
+<p>Both methods return <code>true</code> if an action was taken, <code>false</code> if there&#39;s nothing to undo/redo.</p>
+<h2>Step 3: Check Undo/Redo Availability</h2>
+<p>Use <code>canUndo()</code> and <code>canRedo()</code> to update UI state:</p>
+<pre><code class="language-typescript">// Enable/disable undo button
+undoButton.disabled = !store.canUndo()
+
+// Enable/disable redo button
+redoButton.disabled = !store.canRedo()
+</code></pre>
+<h2>Step 4: Configure History Depth</h2>
+<p>Limit memory usage by capping history size:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  history: {
+    maxHistory: 50  // Keep only last 50 states
+  }
+})
+</code></pre>
+<p>Default is 100 entries. Older entries are discarded when the limit is reached.</p>
+<h2>Complete Example</h2>
+<pre><code class="language-typescript">import { createFlagStore, FlagStoreWithHistory } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: { text: &#39;&#39; },
+  history: { maxHistory: 100 }
+}) as FlagStoreWithHistory
+
+// Simulate user typing
+store.set(&#39;text&#39;, &#39;H&#39;)
+store.set(&#39;text&#39;, &#39;He&#39;)
+store.set(&#39;text&#39;, &#39;Hel&#39;)
+store.set(&#39;text&#39;, &#39;Hell&#39;)
+store.set(&#39;text&#39;, &#39;Hello&#39;)
+
+console.log(store.get(&#39;text&#39;))  // &quot;Hello&quot;
+
+// User presses Ctrl+Z
+store.undo()
+console.log(store.get(&#39;text&#39;))  // &quot;Hell&quot;
+
+store.undo()
+console.log(store.get(&#39;text&#39;))  // &quot;Hel&quot;
+
+// User presses Ctrl+Y
+store.redo()
+console.log(store.get(&#39;text&#39;))  // &quot;Hell&quot;
+
+// User types something new (clears redo stack)
+store.set(&#39;text&#39;, &#39;Help&#39;)
+console.log(store.canRedo())    // false
+</code></pre>
+<h2>Variations</h2>
+<h3>Undo/Redo with Subscriptions</h3>
+<p>History operations trigger subscriptions normally:</p>
+<pre><code class="language-typescript">store.subscribe((key, newValue, oldValue) =&gt; {
+  console.log(`${key}: ${oldValue} -&gt; ${newValue}`)
+})
+
+store.set(&#39;count&#39;, 10)  // Logs: &quot;count: 0 -&gt; 10&quot;
+store.undo()            // Logs: &quot;count: 10 -&gt; 0&quot;
+store.redo()            // Logs: &quot;count: 0 -&gt; 10&quot;
+</code></pre>
+<h3>Batch Operations as Single Undo Step</h3>
+<p>Use <code>batch()</code> to group changes into one undo step:</p>
+<pre><code class="language-typescript">store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+  store.set(&#39;c&#39;, 3)
+})
+
+// Single undo reverts all three changes
+store.undo()
+store.get(&#39;a&#39;)  // undefined
+store.get(&#39;b&#39;)  // undefined
+store.get(&#39;c&#39;)  // undefined
+</code></pre>
+<h3>Clear History</h3>
+<p>Start fresh without clearing data:</p>
+<pre><code class="language-typescript">store.set(&#39;count&#39;, 100)
+store.clearHistory()
+
+console.log(store.get(&#39;count&#39;))  // 100 (data preserved)
+console.log(store.canUndo())     // false (history cleared)
+</code></pre>
+<h3>Combined with Persistence</h3>
+<p>History works alongside persistence:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  initial: { count: 0 },
+  history: true,
+  persist: { storage: localStorage }
+})
+
+// Changes are saved AND tracked for undo
+store.set(&#39;count&#39;, 10)
+store.undo()  // Also saves the undone state
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>Undo Does Nothing</h3>
+<p><strong>Symptom:</strong> <code>undo()</code> returns <code>false</code>.</p>
+<p><strong>Cause:</strong> No history to undo (fresh store or history cleared).</p>
+<p><strong>Solution:</strong> Check <code>canUndo()</code> before calling <code>undo()</code>.</p>
+<h3>Redo Not Working</h3>
+<p><strong>Symptom:</strong> <code>redo()</code> returns <code>false</code> after undo.</p>
+<p><strong>Cause:</strong> A new change was made after undo, which clears the redo stack.</p>
+<p><strong>Solution:</strong> This is expected behavior. Any new change after undo starts a new history branch.</p>
+<h3>Memory Usage</h3>
+<p><strong>Symptom:</strong> High memory consumption.</p>
+<p><strong>Cause:</strong> Large history with many state snapshots.</p>
+<p><strong>Solution:</strong> Lower <code>maxHistory</code> or call <code>clearHistory()</code> at logical breakpoints.</p>
+<h2>See Also</h2>
+<ul>
+<li><strong><a href="guide-batch-operations.html">Batch Operations</a></strong> - Group changes into single undo steps</li>
+<li><strong><a href="concept-flag-store.html">Flag Store</a></strong> - Core store operations</li>
+<li><strong><a href="api-history.html">API: History</a></strong> - Full method reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

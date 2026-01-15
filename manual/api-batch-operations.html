@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Operations API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Batch Operations API</h1>
+<p>Group multiple changes into a single atomic operation.</p>
+<hr>
+<h2><code>batch()</code></h2>
+<p>Executes a function with batched updates. All changes are grouped and subscribers are notified once at the end.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">batch&lt;T&gt;(fn: () =&gt; T): T
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fn</code></td>
+<td><code>() =&gt; T</code></td>
+<td>Yes</td>
+<td>Function to execute within the batch</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>T</code> — The return value of the function.</p>
+<p><strong>Throws:</strong></p>
+<ul>
+<li>Re-throws any error from the function (after rolling back changes)</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">// Without batch: 3 notifications
+store.set(&#39;a&#39;, 1)
+store.set(&#39;b&#39;, 2)
+store.set(&#39;c&#39;, 3)
+
+// With batch: 1 notification
+store.batch(() =&gt; {
+  store.set(&#39;x&#39;, 1)
+  store.set(&#39;y&#39;, 2)
+  store.set(&#39;z&#39;, 3)
+})
+</code></pre>
+<hr>
+<h2>Behavior Details</h2>
+<h3>Single Notification</h3>
+<p>Subscribers are notified once after the batch completes:</p>
+<pre><code class="language-typescript">let notifyCount = 0
+store.subscribe(() =&gt; notifyCount++)
+
+store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+  store.set(&#39;c&#39;, 3)
+})
+
+console.log(notifyCount)  // 1
+</code></pre>
+<h3>Return Value</h3>
+<p>The batch returns whatever your function returns:</p>
+<pre><code class="language-typescript">const result = store.batch(() =&gt; {
+  store.set(&#39;gold&#39;, 100)
+  return store.get(&#39;gold&#39;)
+})
+
+console.log(result)  // 100
+</code></pre>
+<h3>Error Rollback</h3>
+<p>If the function throws, all changes are rolled back:</p>
+<pre><code class="language-typescript">store.set(&#39;count&#39;, 0)
+
+try {
+  store.batch(() =&gt; {
+    store.set(&#39;count&#39;, 100)
+    store.set(&#39;name&#39;, &#39;test&#39;)
+    throw new Error(&#39;Oops&#39;)
+  })
+} catch (e) {
+  // Error propagates
+}
+
+store.get(&#39;count&#39;)   // 0 (rolled back)
+store.has(&#39;name&#39;)    // false (rolled back)
+</code></pre>
+<h3>No Notifications on Error</h3>
+<p>If a batch errors, no notifications are fired:</p>
+<pre><code class="language-typescript">let notified = false
+store.subscribe(() =&gt; notified = true)
+
+try {
+  store.batch(() =&gt; {
+    store.set(&#39;x&#39;, 1)
+    throw new Error(&#39;Oops&#39;)
+  })
+} catch (e) {}
+
+console.log(notified)  // false
+</code></pre>
+<h3>Nested Batches</h3>
+<p>Nested batches are flattened into the outermost batch:</p>
+<pre><code class="language-typescript">let notifyCount = 0
+store.subscribe(() =&gt; notifyCount++)
+
+store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+
+  store.batch(() =&gt; {
+    store.set(&#39;b&#39;, 2)
+  })  // No notification here
+
+  store.set(&#39;c&#39;, 3)
+})  // Single notification here
+
+console.log(notifyCount)  // 1
+</code></pre>
+<h3>Single History Step</h3>
+<p>With history enabled, a batch creates a single undo step:</p>
+<pre><code class="language-typescript">const store = createFlagStore({ history: true })
+
+store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+  store.set(&#39;c&#39;, 3)
+})
+
+store.undo()  // Reverts ALL three changes
+
+store.get(&#39;a&#39;)  // undefined
+store.get(&#39;b&#39;)  // undefined
+store.get(&#39;c&#39;)  // undefined
+</code></pre>
+<h3>Key Subscriptions</h3>
+<p>Key-specific subscriptions fire once per affected key after the batch:</p>
+<pre><code class="language-typescript">store.subscribeKey(&#39;a&#39;, () =&gt; console.log(&#39;a changed&#39;))
+store.subscribeKey(&#39;b&#39;, () =&gt; console.log(&#39;b changed&#39;))
+store.subscribeKey(&#39;c&#39;, () =&gt; console.log(&#39;c changed&#39;))
+
+store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+})
+
+// After batch:
+// Logs: &quot;a changed&quot;
+// Logs: &quot;b changed&quot;
+// (c not logged - wasn&#39;t changed)
+</code></pre>
+<h3>All Operations Work</h3>
+<p>Any store operation works inside a batch:</p>
+<pre><code class="language-typescript">store.batch(() =&gt; {
+  store.set(&#39;flag&#39;, true)
+  store.toggle(&#39;flag&#39;)
+  store.set(&#39;count&#39;, 0)
+  store.increment(&#39;count&#39;, 10)
+  store.decrement(&#39;count&#39;, 3)
+  store.setMany({ x: 1, y: 2 })
+  store.delete(&#39;temp&#39;)
+})
+</code></pre>
+<h3>With Persistence</h3>
+<p>Batched changes are saved once at the end:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: { storage: localStorage }
+})
+
+store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+  store.set(&#39;c&#39;, 3)
+})
+
+// Single save to localStorage after batch
+</code></pre>
+<h3>Changes Visible Inside Batch</h3>
+<p>Changes are immediately visible within the batch:</p>
+<pre><code class="language-typescript">store.batch(() =&gt; {
+  store.set(&#39;x&#39;, 10)
+  console.log(store.get(&#39;x&#39;))  // 10 (visible immediately)
+
+  store.increment(&#39;x&#39;, 5)
+  console.log(store.get(&#39;x&#39;))  // 15
+})
+</code></pre>
+<hr>
+<h2>Use Cases</h2>
+<h3>Atomic Updates</h3>
+<p>Ensure related changes happen together:</p>
+<pre><code class="language-typescript">store.batch(() =&gt; {
+  store.decrement(&#39;player_health&#39;, damage)
+  store.increment(&#39;enemy_score&#39;, damage)
+  store.set(&#39;last_hit_time&#39;, Date.now())
+})
+</code></pre>
+<h3>Performance Optimization</h3>
+<p>Prevent multiple re-renders:</p>
+<pre><code class="language-typescript">store.batch(() =&gt; {
+  // Update many values without triggering re-render for each
+  for (const [key, value] of Object.entries(newState)) {
+    store.set(key, value)
+  }
+})
+// Single re-render after all updates
+</code></pre>
+<h3>Transaction-Like Behavior</h3>
+<p>All-or-nothing updates:</p>
+<pre><code class="language-typescript">function transferGold(from: string, to: string, amount: number) {
+  store.batch(() =&gt; {
+    const fromGold = store.get(`${from}.gold`) as number
+    if (fromGold &lt; amount) {
+      throw new Error(&#39;Insufficient gold&#39;)
+    }
+    store.decrement(`${from}.gold`, amount)
+    store.increment(`${to}.gold`, amount)
+  })
+}
+</code></pre>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscriptions API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Subscriptions API</h1>
+<p>Watch for flag changes and react with callbacks.</p>
+<hr>
+<h2><code>subscribe()</code></h2>
+<p>Subscribes to all flag changes in the store.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">subscribe(callback: ChangeCallback): UnsubscribeFn
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>callback</code></td>
+<td><code>ChangeCallback</code></td>
+<td>Yes</td>
+<td>Function called when any flag changes</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>UnsubscribeFn</code> — Function to call to stop receiving notifications.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const unsubscribe = store.subscribe((key, newValue, oldValue) =&gt; {
+  console.log(`${key}: ${oldValue} -&gt; ${newValue}`)
+})
+
+store.set(&#39;gold&#39;, 100)  // Logs: &quot;gold: undefined -&gt; 100&quot;
+
+// Stop watching
+unsubscribe()
+store.set(&#39;gold&#39;, 200)  // No log
+</code></pre>
+<hr>
+<h2><code>subscribeKey()</code></h2>
+<p>Subscribes to changes for a specific flag key.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">subscribeKey(key: string, callback: KeyChangeCallback): UnsubscribeFn
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The flag key to watch</td>
+</tr>
+<tr>
+<td><code>callback</code></td>
+<td><code>KeyChangeCallback</code></td>
+<td>Yes</td>
+<td>Function called when the flag changes</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>UnsubscribeFn</code> — Function to call to stop receiving notifications.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.subscribeKey(&#39;gold&#39;, (newValue, oldValue) =&gt; {
+  console.log(`Gold: ${oldValue} -&gt; ${newValue}`)
+})
+
+store.set(&#39;gold&#39;, 100)    // Logs: &quot;Gold: undefined -&gt; 100&quot;
+store.set(&#39;health&#39;, 50)   // No log (different key)
+</code></pre>
+<hr>
+<h2>Types</h2>
+<h3><code>ChangeCallback</code></h3>
+<pre><code class="language-typescript">type ChangeCallback = (
+  key: string,
+  newValue: FlagValue | undefined,
+  oldValue: FlagValue | undefined
+) =&gt; void
+</code></pre>
+<p>Callback for <code>subscribe()</code>. Receives:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td>The flag key that changed</td>
+</tr>
+<tr>
+<td><code>newValue</code></td>
+<td>The new value, or <code>undefined</code> if deleted</td>
+</tr>
+<tr>
+<td><code>oldValue</code></td>
+<td>The previous value, or <code>undefined</code> if newly created</td>
+</tr>
+</tbody></table>
+<h3><code>KeyChangeCallback</code></h3>
+<pre><code class="language-typescript">type KeyChangeCallback = (
+  newValue: FlagValue | undefined,
+  oldValue: FlagValue | undefined
+) =&gt; void
+</code></pre>
+<p>Callback for <code>subscribeKey()</code>. Receives:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>newValue</code></td>
+<td>The new value, or <code>undefined</code> if deleted</td>
+</tr>
+<tr>
+<td><code>oldValue</code></td>
+<td>The previous value, or <code>undefined</code> if newly created</td>
+</tr>
+</tbody></table>
+<h3><code>UnsubscribeFn</code></h3>
+<pre><code class="language-typescript">type UnsubscribeFn = () =&gt; void
+</code></pre>
+<p>Call this to stop receiving notifications. Safe to call multiple times.</p>
+<hr>
+<h2>Behavior Details</h2>
+<h3>Multiple Subscribers</h3>
+<p>All subscribers receive notifications in registration order:</p>
+<pre><code class="language-typescript">store.subscribe(() =&gt; console.log(&#39;First&#39;))
+store.subscribe(() =&gt; console.log(&#39;Second&#39;))
+store.set(&#39;x&#39;, 1)
+// Logs: &quot;First&quot;, then &quot;Second&quot;
+</code></pre>
+<h3>Duplicate Subscriptions</h3>
+<p>The same callback can be subscribed multiple times:</p>
+<pre><code class="language-typescript">const callback = () =&gt; console.log(&#39;Called&#39;)
+store.subscribe(callback)
+store.subscribe(callback)
+store.set(&#39;x&#39;, 1)
+// Logs: &quot;Called&quot;, &quot;Called&quot;
+</code></pre>
+<p>Each subscription has its own unsubscribe function.</p>
+<h3>Error Handling</h3>
+<p>Errors in callbacks are caught, logged, and don&#39;t affect other subscribers:</p>
+<pre><code class="language-typescript">store.subscribe(() =&gt; { throw new Error(&#39;Oops&#39;) })
+store.subscribe(() =&gt; console.log(&#39;Still runs&#39;))
+store.set(&#39;x&#39;, 1)
+// Logs error to console.error
+// Logs: &quot;Still runs&quot;
+</code></pre>
+<h3>Subscribing During Callback</h3>
+<p>New subscriptions during a callback don&#39;t fire for the current change:</p>
+<pre><code class="language-typescript">store.subscribe(() =&gt; {
+  store.subscribe(() =&gt; console.log(&#39;New subscription&#39;))
+})
+store.set(&#39;x&#39;, 1)  // &quot;New subscription&quot; not logged
+store.set(&#39;x&#39;, 2)  // &quot;New subscription&quot; logged
+</code></pre>
+<h3>Special Events</h3>
+<h4>Clear Event</h4>
+<p><code>clear()</code> fires a single notification with key <code>&#39;__clear__&#39;</code>:</p>
+<pre><code class="language-typescript">store.subscribe((key) =&gt; console.log(key))
+store.clear()
+// Logs: &quot;__clear__&quot;
+</code></pre>
+<p>Key subscriptions are NOT notified on clear.</p>
+<h4>setMany Event</h4>
+<p><code>setMany()</code> fires a single notification with key <code>&#39;__setMany__&#39;</code>:</p>
+<pre><code class="language-typescript">store.subscribe((key) =&gt; console.log(key))
+store.setMany({ a: 1, b: 2 })
+// Logs: &quot;__setMany__&quot;
+</code></pre>
+<p>Individual key subscriptions ARE notified for each affected key.</p>
+<h3>Batch Behavior</h3>
+<p>Inside <code>batch()</code>, notifications are deferred until the batch completes:</p>
+<pre><code class="language-typescript">store.subscribe(() =&gt; console.log(&#39;Changed&#39;))
+store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+  store.set(&#39;c&#39;, 3)
+})
+// Logs: &quot;Changed&quot; (once, not three times)
+</code></pre>
+<p>See <a href="api-batch-operations.html">Batch Operations</a> for details.</p>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

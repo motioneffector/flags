@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Types API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Types API</h1>
+<p>TypeScript type definitions for the flag store.</p>
+<hr>
+<h2>Core Types</h2>
+<h3><code>FlagValue</code></h3>
+<p>Valid types for flag values.</p>
+<pre><code class="language-typescript">type FlagValue = boolean | number | string
+</code></pre>
+<p>Only these three types can be stored in the flag store. Objects, arrays, null, and undefined are not valid stored values.</p>
+<hr>
+<h3><code>FlagStore</code></h3>
+<p>Main interface for a flag store.</p>
+<pre><code class="language-typescript">interface FlagStore {
+  // Reading
+  get(key: string): FlagValue | undefined
+  has(key: string): boolean
+  all(): Record&lt;string, FlagValue&gt;
+  keys(): string[]
+
+  // Writing
+  set(key: string, value: FlagValue | null | undefined): FlagStore
+  delete(key: string): FlagStore
+  clear(): FlagStore
+  setMany(values: Record&lt;string, FlagValue | null | undefined&gt;): FlagStore
+
+  // Specialized writes
+  toggle(key: string): boolean
+  increment(key: string, amount?: number): number
+  decrement(key: string, amount?: number): number
+
+  // Queries
+  check(condition: string): boolean
+
+  // Subscriptions
+  subscribe(callback: ChangeCallback): UnsubscribeFn
+  subscribeKey(key: string, callback: KeyChangeCallback): UnsubscribeFn
+
+  // Organization
+  namespace(prefix: string): FlagStore
+  batch&lt;T&gt;(fn: () =&gt; T): T
+  compute(key: string, dependencies: string[], fn: ComputeFn): void
+}
+</code></pre>
+<hr>
+<h3><code>FlagStoreWithHistory</code></h3>
+<p>Extended store with undo/redo support.</p>
+<pre><code class="language-typescript">interface FlagStoreWithHistory extends FlagStore {
+  undo(): boolean
+  redo(): boolean
+  canUndo(): boolean
+  canRedo(): boolean
+  clearHistory(): void
+}
+</code></pre>
+<p>Returned when store is created with <code>history: true</code>.</p>
+<hr>
+<h3><code>FlagStoreWithPersistence</code></h3>
+<p>Extended store with persistence support.</p>
+<pre><code class="language-typescript">interface FlagStoreWithPersistence extends FlagStore {
+  save(): void
+  load(): void
+}
+</code></pre>
+<p>Returned when store is created with <code>persist: { ... }</code>.</p>
+<hr>
+<h2>Configuration Types</h2>
+<h3><code>FlagStoreOptions</code></h3>
+<p>Options for <code>createFlagStore()</code>.</p>
+<pre><code class="language-typescript">interface FlagStoreOptions {
+  initial?: Record&lt;string, FlagValue&gt;
+  persist?: PersistOptions
+  history?: boolean | HistoryOptions
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>initial</code></td>
+<td><code>Record&lt;string, FlagValue&gt;</code></td>
+<td>Initial flag values</td>
+</tr>
+<tr>
+<td><code>persist</code></td>
+<td><code>PersistOptions</code></td>
+<td>Persistence configuration</td>
+</tr>
+<tr>
+<td><code>history</code></td>
+<td><code>boolean | HistoryOptions</code></td>
+<td>History/undo configuration</td>
+</tr>
+</tbody></table>
+<hr>
+<h3><code>PersistOptions</code></h3>
+<p>Options for persistent storage.</p>
+<pre><code class="language-typescript">interface PersistOptions {
+  storage: Storage
+  key?: string
+  autoSave?: boolean
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>storage</code></td>
+<td><code>Storage</code></td>
+<td>(required)</td>
+<td>Storage backend</td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td><code>&#39;@motioneffector/flags&#39;</code></td>
+<td>Storage key</td>
+</tr>
+<tr>
+<td><code>autoSave</code></td>
+<td><code>boolean</code></td>
+<td><code>true</code></td>
+<td>Auto-save changes</td>
+</tr>
+</tbody></table>
+<hr>
+<h3><code>HistoryOptions</code></h3>
+<p>Options for undo/redo history.</p>
+<pre><code class="language-typescript">interface HistoryOptions {
+  maxHistory?: number
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>maxHistory</code></td>
+<td><code>number</code></td>
+<td><code>100</code></td>
+<td>Maximum history entries</td>
+</tr>
+</tbody></table>
+<hr>
+<h3><code>Storage</code></h3>
+<p>Interface for storage backends.</p>
+<pre><code class="language-typescript">interface Storage {
+  getItem(key: string): string | null
+  setItem(key: string, value: string): void
+  removeItem(key: string): void
+}
+</code></pre>
+<p>Compatible with <code>localStorage</code> and <code>sessionStorage</code>.</p>
+<hr>
+<h2>Callback Types</h2>
+<h3><code>ChangeCallback</code></h3>
+<p>Callback for global subscriptions.</p>
+<pre><code class="language-typescript">type ChangeCallback = (
+  key: string,
+  newValue: FlagValue | undefined,
+  oldValue: FlagValue | undefined
+) =&gt; void
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td>The flag key that changed</td>
+</tr>
+<tr>
+<td><code>newValue</code></td>
+<td>New value, or <code>undefined</code> if deleted</td>
+</tr>
+<tr>
+<td><code>oldValue</code></td>
+<td>Previous value, or <code>undefined</code> if new</td>
+</tr>
+</tbody></table>
+<hr>
+<h3><code>KeyChangeCallback</code></h3>
+<p>Callback for key-specific subscriptions.</p>
+<pre><code class="language-typescript">type KeyChangeCallback = (
+  newValue: FlagValue | undefined,
+  oldValue: FlagValue | undefined
+) =&gt; void
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>newValue</code></td>
+<td>New value, or <code>undefined</code> if deleted</td>
+</tr>
+<tr>
+<td><code>oldValue</code></td>
+<td>Previous value, or <code>undefined</code> if new</td>
+</tr>
+</tbody></table>
+<hr>
+<h3><code>UnsubscribeFn</code></h3>
+<p>Function to stop receiving notifications.</p>
+<pre><code class="language-typescript">type UnsubscribeFn = () =&gt; void
+</code></pre>
+<p>Safe to call multiple times.</p>
+<hr>
+<h3><code>ComputeFn</code></h3>
+<p>Function for computing derived values.</p>
+<pre><code class="language-typescript">type ComputeFn = (...values: Array&lt;FlagValue | undefined&gt;) =&gt; FlagValue
+</code></pre>
+<p>Receives dependency values in order, must return a <code>FlagValue</code>.</p>
+<hr>
+<h2>Type Casting</h2>
+<p>When using history or persistence, cast to access additional methods:</p>
+<pre><code class="language-typescript">import {
+  createFlagStore,
+  FlagStoreWithHistory,
+  FlagStoreWithPersistence
+} from &#39;@motioneffector/flags&#39;
+
+// History store
+const historyStore = createFlagStore({
+  history: true
+}) as FlagStoreWithHistory
+
+historyStore.undo()
+historyStore.canRedo()
+
+// Persistence store
+const persistStore = createFlagStore({
+  persist: { storage: localStorage }
+}) as FlagStoreWithPersistence
+
+persistStore.save()
+persistStore.load()
+
+// Both features
+const fullStore = createFlagStore({
+  history: true,
+  persist: { storage: localStorage }
+}) as FlagStoreWithHistory &amp; FlagStoreWithPersistence
+
+fullStore.undo()
+fullStore.save()
+</code></pre>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

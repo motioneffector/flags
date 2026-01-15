@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Namespaces - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Namespaces</h1>
+<p>Namespaces let you organize flags into logical groups. A namespace is a scoped view of the store where all operations automatically prefix keys with your chosen namespace.</p>
+<h2>How It Works</h2>
+<p>When you create a namespace, you get a store interface that prepends your prefix to every key:</p>
+<pre><code>store.namespace(&#39;player&#39;)
+        ↓
+┌─────────────────────────────────────┐
+│           Flag Store                │
+│  player.health: 100                 │
+│  player.gold: 50                    │
+│  player.name: &quot;Ada&quot;                 │
+│  enemy.health: 200                  │
+└─────────────────────────────────────┘
+
+playerStore.get(&#39;health&#39;)     →  store.get(&#39;player.health&#39;)
+playerStore.set(&#39;gold&#39;, 100)  →  store.set(&#39;player.gold&#39;, 100)
+</code></pre>
+<p>The namespace and root store share the same data. Changes in one are visible in the other.</p>
+<h2>Basic Usage</h2>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore()
+
+// Create a namespace
+const player = store.namespace(&#39;player&#39;)
+
+// Operations are prefixed
+player.set(&#39;health&#39;, 100)
+player.set(&#39;gold&#39;, 50)
+
+// Read via namespace
+player.get(&#39;health&#39;)           // 100
+
+// Read via root store
+store.get(&#39;player.health&#39;)     // 100
+
+// Both see the same data
+store.keys()  // [&#39;player.health&#39;, &#39;player.gold&#39;]
+player.keys() // [&#39;health&#39;, &#39;gold&#39;]
+</code></pre>
+<h2>Key Points</h2>
+<ul>
+<li><p><strong>Dot separator</strong> - Keys are joined with a dot: <code>namespace(&#39;player&#39;)</code> + <code>&#39;health&#39;</code> = <code>&#39;player.health&#39;</code>.</p>
+</li>
+<li><p><strong>Same underlying store</strong> - Namespaces are views, not copies. Changes propagate both ways.</p>
+</li>
+<li><p><strong>Conditions auto-prefix</strong> - In a namespace, <code>check(&#39;health &gt; 50&#39;)</code> becomes <code>check(&#39;player.health &gt; 50&#39;)</code>.</p>
+</li>
+<li><p><strong>Nested namespaces</strong> - You can create namespaces within namespaces: <code>store.namespace(&#39;game&#39;).namespace(&#39;player&#39;)</code> creates <code>game.player.*</code> keys.</p>
+</li>
+<li><p><strong>All operations work</strong> - <code>get</code>, <code>set</code>, <code>toggle</code>, <code>increment</code>, <code>subscribe</code>, <code>batch</code>, <code>compute</code> - everything works within the namespace.</p>
+</li>
+</ul>
+<h2>Examples</h2>
+<h3>Organizing Game State</h3>
+<pre><code class="language-typescript">const store = createFlagStore()
+
+// Player namespace
+const player = store.namespace(&#39;player&#39;)
+player.set(&#39;health&#39;, 100)
+player.set(&#39;gold&#39;, 0)
+player.set(&#39;level&#39;, 1)
+
+// Enemy namespace
+const enemy = store.namespace(&#39;enemy&#39;)
+enemy.set(&#39;health&#39;, 50)
+enemy.set(&#39;damage&#39;, 10)
+
+// Inventory namespace
+const inventory = store.namespace(&#39;inventory&#39;)
+inventory.set(&#39;has_sword&#39;, false)
+inventory.set(&#39;has_potion&#39;, true)
+
+// Check conditions within a namespace
+player.check(&#39;health &gt; 50 AND level &gt;= 1&#39;)  // Checks player.health, player.level
+</code></pre>
+<h3>Nested Namespaces</h3>
+<pre><code class="language-typescript">const game = store.namespace(&#39;game&#39;)
+const player = game.namespace(&#39;player&#39;)
+const stats = player.namespace(&#39;stats&#39;)
+
+stats.set(&#39;strength&#39;, 10)
+
+// The actual key is &#39;game.player.stats.strength&#39;
+store.get(&#39;game.player.stats.strength&#39;)  // 10
+</code></pre>
+<h3>Namespace-Scoped Subscriptions</h3>
+<pre><code class="language-typescript">const player = store.namespace(&#39;player&#39;)
+
+// Only fires for player.* keys
+player.subscribe((key, newValue, oldValue) =&gt; {
+  console.log(`Player ${key}: ${oldValue} -&gt; ${newValue}`)
+})
+
+player.set(&#39;health&#39;, 80)  // Logs: &quot;Player health: 100 -&gt; 80&quot;
+store.set(&#39;enemy.health&#39;, 40)  // No log (different namespace)
+</code></pre>
+<h3>Namespace-Scoped Clear</h3>
+<pre><code class="language-typescript">const player = store.namespace(&#39;player&#39;)
+const enemy = store.namespace(&#39;enemy&#39;)
+
+player.set(&#39;health&#39;, 100)
+enemy.set(&#39;health&#39;, 50)
+
+// Clear only player flags
+player.clear()
+
+store.has(&#39;player.health&#39;)  // false
+store.has(&#39;enemy.health&#39;)   // true
+</code></pre>
+<h2>Root Store Access</h2>
+<p>The root store always sees all keys with their full prefixes:</p>
+<pre><code class="language-typescript">const player = store.namespace(&#39;player&#39;)
+player.set(&#39;health&#39;, 100)
+player.set(&#39;gold&#39;, 50)
+
+// Root store sees prefixed keys
+store.all()
+// { &#39;player.health&#39;: 100, &#39;player.gold&#39;: 50 }
+
+// Namespace sees short keys
+player.all()
+// { health: 100, gold: 50 }
+</code></pre>
+<h2>Related</h2>
+<ul>
+<li><strong><a href="concept-condition-expressions.html">Condition Expressions</a></strong> - Conditions in namespaces auto-prefix</li>
+<li><strong><a href="concept-subscriptions.html">Subscriptions</a></strong> - Scoped subscription behavior</li>
+<li><strong><a href="api-namespaces.html">API: Namespaces</a></strong> - Full method reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
