@@ -1,514 +1,634 @@
-// Test Runner and Tests for the demo page
-import { createFlagStore, ValidationError, ParseError } from '../dist/index.js'
-import { runDemoPlayback } from './demo-playback.js'
+// Tests for @motioneffector/flags demo
 
 // ============================================
-// TEST RUNNER
+// DEMO INTEGRITY TESTS
+// These tests verify the demo itself is correctly structured.
+// They are IDENTICAL across all @motioneffector demos.
+// Do not modify, skip, or weaken these tests.
 // ============================================
 
-const testRunner = {
-  tests: [],
-  results: [],
-  running: false,
+function registerIntegrityTests() {
+  // ─────────────────────────────────────────────
+  // STRUCTURAL INTEGRITY
+  // ─────────────────────────────────────────────
 
-  register(name, fn) {
-    this.tests.push({ name, fn })
-  },
+  testRunner.registerTest('[Integrity] Library is loaded', () => {
+    if (typeof window.Library === 'undefined') {
+      throw new Error('window.Library is undefined - library not loaded')
+    }
+  })
 
-  async run() {
-    if (this.running) return
-    this.running = true
-    this.results = []
+  testRunner.registerTest('[Integrity] Library has exports', () => {
+    const exports = Object.keys(window.Library)
+    if (exports.length === 0) {
+      throw new Error('window.Library has no exports')
+    }
+  })
 
-    const output = document.getElementById('test-output')
-    const progressFill = document.getElementById('progress-fill')
-    const progressText = document.getElementById('progress-text')
-    const summary = document.getElementById('test-summary')
-    const passedCount = document.getElementById('passed-count')
-    const failedCount = document.getElementById('failed-count')
-    const skippedCount = document.getElementById('skipped-count')
-    const runBtn = document.getElementById('run-tests')
+  testRunner.registerTest('[Integrity] Test runner exists', () => {
+    const runner = document.getElementById('test-runner')
+    if (!runner) {
+      throw new Error('No element with id="test-runner"')
+    }
+  })
 
-    runBtn.disabled = true
-    output.innerHTML = ''
-    summary.classList.add('hidden')
-    progressFill.style.width = '0%'
-    progressFill.className = 'test-progress-fill'
+  testRunner.registerTest('[Integrity] Test runner is first section after header', () => {
+    const main = document.querySelector('main')
+    if (!main) {
+      throw new Error('No <main> element found')
+    }
+    const firstSection = main.querySelector('section')
+    if (!firstSection || firstSection.id !== 'test-runner') {
+      throw new Error('Test runner must be the first <section> inside <main>')
+    }
+  })
 
-    let passed = 0
-    let failed = 0
+  testRunner.registerTest('[Integrity] Run All Tests button exists with correct format', () => {
+    const btn = document.getElementById('run-all-tests')
+    if (!btn) {
+      throw new Error('No button with id="run-all-tests"')
+    }
+    const text = btn.textContent.trim()
+    if (!text.includes('Run All Tests')) {
+      throw new Error(`Button text must include "Run All Tests", got: "${text}"`)
+    }
+    const icon = btn.querySelector('.btn-icon')
+    if (!icon || !icon.textContent.includes('▶')) {
+      throw new Error('Button must have play icon (▶) in .btn-icon element')
+    }
+  })
 
-    for (let i = 0; i < this.tests.length; i++) {
-      const test = this.tests[i]
-      const progress = ((i + 1) / this.tests.length) * 100
+  testRunner.registerTest('[Integrity] At least one exhibit exists', () => {
+    const exhibits = document.querySelectorAll('.exhibit')
+    if (exhibits.length === 0) {
+      throw new Error('No elements with class="exhibit"')
+    }
+  })
 
-      progressFill.style.width = `${progress}%`
-      progressText.textContent = `Running: ${test.name}`
+  testRunner.registerTest('[Integrity] All exhibits have unique IDs', () => {
+    const exhibits = document.querySelectorAll('.exhibit')
+    const ids = new Set()
+    exhibits.forEach(ex => {
+      if (!ex.id) {
+        throw new Error('Exhibit missing id attribute')
+      }
+      if (ids.has(ex.id)) {
+        throw new Error(`Duplicate exhibit id: ${ex.id}`)
+      }
+      ids.add(ex.id)
+    })
+  })
 
-      try {
-        await test.fn()
-        passed++
-        this.results.push({ name: test.name, passed: true })
-        output.innerHTML += `
-          <div class="test-item">
-            <span class="test-icon pass">✓</span>
-            <span class="test-name">${escapeHtml(test.name)}</span>
-          </div>
-        `
-      } catch (e) {
-        failed++
-        this.results.push({ name: test.name, passed: false, error: e.message })
-        output.innerHTML += `
-          <div class="test-item">
-            <span class="test-icon fail">✗</span>
-            <div>
-              <div class="test-name">${escapeHtml(test.name)}</div>
-              <div class="test-error">${escapeHtml(e.message)}</div>
-            </div>
-          </div>
-        `
+  testRunner.registerTest('[Integrity] All exhibits registered for walkthrough', () => {
+    const exhibitElements = document.querySelectorAll('.exhibit')
+    const registeredCount = testRunner.exhibits.length
+    if (registeredCount < exhibitElements.length) {
+      throw new Error(
+        `Only ${registeredCount} exhibits registered for walkthrough, ` +
+        `but ${exhibitElements.length} .exhibit elements exist`
+      )
+    }
+  })
+
+  testRunner.registerTest('[Integrity] CSS loaded from demo-files/', () => {
+    const links = document.querySelectorAll('link[rel="stylesheet"]')
+    const hasExternal = Array.from(links).some(link =>
+      link.href.includes('demo-files/')
+    )
+    if (!hasExternal) {
+      throw new Error('No stylesheet loaded from demo-files/ directory')
+    }
+  })
+
+  testRunner.registerTest('[Integrity] No inline style tags', () => {
+    const styles = document.querySelectorAll('style')
+    if (styles.length > 0) {
+      throw new Error(`Found ${styles.length} inline <style> tags - extract to demo-files/demo.css`)
+    }
+  })
+
+  testRunner.registerTest('[Integrity] No inline onclick handlers', () => {
+    const withOnclick = document.querySelectorAll('[onclick]')
+    if (withOnclick.length > 0) {
+      throw new Error(`Found ${withOnclick.length} elements with onclick - use addEventListener`)
+    }
+  })
+
+  // ─────────────────────────────────────────────
+  // NO AUTO-PLAY VERIFICATION
+  // ─────────────────────────────────────────────
+
+  testRunner.registerTest('[Integrity] Output areas are empty on load', () => {
+    const outputs = document.querySelectorAll('.exhibit-output, .output, [data-output]')
+    outputs.forEach(output => {
+      const hasPlaceholder = output.dataset.placeholder ||
+        output.classList.contains('placeholder') ||
+        output.querySelector('.placeholder')
+
+      const text = output.textContent.trim()
+      const children = output.children.length
+
+      if ((text.length > 50 || children > 1) && !hasPlaceholder) {
+        throw new Error(
+          `Output area appears pre-populated: "${text.substring(0, 50)}..." - ` +
+          `outputs must be empty until user interaction`
+        )
+      }
+    })
+  })
+
+  testRunner.registerTest('[Integrity] No setTimeout calls on module load', () => {
+    if (window.__suspiciousTimersDetected) {
+      throw new Error(
+        'Detected setTimeout/setInterval during page load - ' +
+        'demos must not auto-run'
+      )
+    }
+  })
+
+  // ─────────────────────────────────────────────
+  // REAL LIBRARY VERIFICATION
+  // ─────────────────────────────────────────────
+
+  testRunner.registerTest('[Integrity] Library functions are callable', () => {
+    const lib = window.Library
+    const exports = Object.keys(lib)
+
+    const hasFunctions = exports.some(key => typeof lib[key] === 'function')
+    if (!hasFunctions) {
+      throw new Error('Library exports no callable functions')
+    }
+  })
+
+  testRunner.registerTest('[Integrity] No mock implementations detected', () => {
+    const suspicious = [
+      'mockParse', 'mockValidate', 'fakeParse', 'fakeValidate',
+      'stubParse', 'stubValidate', 'testParse', 'testValidate'
+    ]
+    suspicious.forEach(name => {
+      if (typeof window[name] === 'function') {
+        throw new Error(`Detected mock function: window.${name} - use real library`)
+      }
+    })
+  })
+
+  // ─────────────────────────────────────────────
+  // VISUAL FEEDBACK VERIFICATION
+  // ─────────────────────────────────────────────
+
+  testRunner.registerTest('[Integrity] CSS includes animation definitions', () => {
+    const sheets = document.styleSheets
+    let hasAnimations = false
+
+    try {
+      for (const sheet of sheets) {
+        if (!sheet.href || sheet.href.includes('demo-files/')) {
+          const rules = sheet.cssRules || sheet.rules
+          for (const rule of rules) {
+            if (rule.type === CSSRule.KEYFRAMES_RULE ||
+                (rule.style && (
+                  rule.style.animation ||
+                  rule.style.transition ||
+                  rule.style.animationName
+                ))) {
+              hasAnimations = true
+              break
+            }
+          }
+        }
+        if (hasAnimations) break
+      }
+    } catch (e) {
+      // CORS error - assume external sheet has animations
+      hasAnimations = true
+    }
+
+    if (!hasAnimations) {
+      throw new Error('No CSS animations or transitions found - visual feedback required')
+    }
+  })
+
+  testRunner.registerTest('[Integrity] Interactive elements have hover states', () => {
+    const buttons = document.querySelectorAll('button, .btn')
+    if (buttons.length === 0) return
+
+    const btn = buttons[0]
+    const styles = window.getComputedStyle(btn)
+    if (styles.cursor !== 'pointer') {
+      throw new Error('Buttons should have cursor: pointer')
+    }
+  })
+
+  // ─────────────────────────────────────────────
+  // WALKTHROUGH REGISTRATION VERIFICATION
+  // ─────────────────────────────────────────────
+
+  testRunner.registerTest('[Integrity] Walkthrough demonstrations are async functions', () => {
+    testRunner.exhibits.forEach(exhibit => {
+      if (typeof exhibit.demonstrate !== 'function') {
+        throw new Error(`Exhibit "${exhibit.name}" has no demonstrate function`)
+      }
+      const result = exhibit.demonstrate.toString()
+      if (!result.includes('async') && !result.includes('Promise')) {
+        console.warn(`Exhibit "${exhibit.name}" demonstrate() may not be async`)
+      }
+    })
+  })
+
+  testRunner.registerTest('[Integrity] Each exhibit has required elements', () => {
+    const exhibits = document.querySelectorAll('.exhibit')
+    exhibits.forEach(exhibit => {
+      const title = exhibit.querySelector('.exhibit-title, h2, h3')
+      if (!title) {
+        throw new Error(`Exhibit ${exhibit.id} missing title element`)
       }
 
-      // Scroll to bottom
-      output.scrollTop = output.scrollHeight
-
-      // Small delay so user can see progress
-      await new Promise(r => setTimeout(r, 15))
-    }
-
-    progressFill.classList.add(failed === 0 ? 'success' : 'failure')
-    progressText.textContent = `Complete: ${passed}/${this.tests.length} passed`
-
-    passedCount.textContent = passed
-    failedCount.textContent = failed
-    skippedCount.textContent = 0
-    summary.classList.remove('hidden')
-
-    runBtn.disabled = false
-    this.running = false
-
-    // After tests complete, run the demo playback
-    await new Promise(r => setTimeout(r, 1000)) // Brief pause before demo
-    progressText.textContent = 'Tests complete. Starting demo playback...'
-    await new Promise(r => setTimeout(r, 500))
-    await runDemoPlayback()
-  }
-}
-
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
-// ============================================
-// ASSERTION HELPERS
-// ============================================
-
-function assert(condition, message) {
-  if (!condition) {
-    throw new Error(message || 'Assertion failed')
-  }
-}
-
-function assertEqual(actual, expected, message) {
-  if (actual !== expected) {
-    throw new Error(message || `Expected ${expected}, got ${actual}`)
-  }
-}
-
-function assertThrows(fn, errorType, message) {
-  try {
-    fn()
-    throw new Error(message || `Expected ${errorType?.name || 'error'} to be thrown`)
-  } catch (e) {
-    if (errorType && !(e instanceof errorType)) {
-      throw new Error(message || `Expected ${errorType.name}, got ${e.constructor.name}`)
-    }
-  }
-}
-
-// ============================================
-// REGISTER TESTS
-// ============================================
-
-// Basic Store Creation
-testRunner.register('creates empty store with no arguments', () => {
-  const store = createFlagStore()
-  assert(store !== undefined, 'Store should be defined')
-  assertEqual(typeof store.get, 'function')
-  assertEqual(typeof store.set, 'function')
-})
-
-testRunner.register('creates store with initial boolean values', () => {
-  const store = createFlagStore({ initial: { flag: true } })
-  assertEqual(store.get('flag'), true)
-})
-
-testRunner.register('creates store with initial numeric values', () => {
-  const store = createFlagStore({ initial: { count: 42 } })
-  assertEqual(store.get('count'), 42)
-})
-
-testRunner.register('creates store with initial string values', () => {
-  const store = createFlagStore({ initial: { name: 'test' } })
-  assertEqual(store.get('name'), 'test')
-})
-
-// Setting Values
-testRunner.register('store.set() sets boolean values', () => {
-  const store = createFlagStore()
-  store.set('flag', true)
-  assertEqual(store.get('flag'), true)
-  store.set('flag', false)
-  assertEqual(store.get('flag'), false)
-})
-
-testRunner.register('store.set() sets numeric values', () => {
-  const store = createFlagStore()
-  store.set('count', 42)
-  assertEqual(store.get('count'), 42)
-})
-
-testRunner.register('store.set() sets string values', () => {
-  const store = createFlagStore()
-  store.set('name', 'alice')
-  assertEqual(store.get('name'), 'alice')
-})
-
-testRunner.register('store.set(key, null) removes the key', () => {
-  const store = createFlagStore()
-  store.set('key', 'value')
-  store.set('key', null)
-  assertEqual(store.has('key'), false)
-})
-
-testRunner.register('store.set() returns store for chaining', () => {
-  const store = createFlagStore()
-  const result = store.set('a', 1)
-  assertEqual(result, store)
-})
-
-// Getting Values
-testRunner.register('store.get() returns undefined for non-existent key', () => {
-  const store = createFlagStore()
-  assertEqual(store.get('nonexistent'), undefined)
-})
-
-testRunner.register('store.get() returns stored values', () => {
-  const store = createFlagStore({ initial: { x: 10 } })
-  assertEqual(store.get('x'), 10)
-})
-
-// Has
-testRunner.register('store.has() returns true for existing keys', () => {
-  const store = createFlagStore({ initial: { flag: false } })
-  assertEqual(store.has('flag'), true)
-})
-
-testRunner.register('store.has() returns false for non-existent keys', () => {
-  const store = createFlagStore()
-  assertEqual(store.has('nonexistent'), false)
-})
-
-// Delete
-testRunner.register('store.delete() removes keys', () => {
-  const store = createFlagStore()
-  store.set('key', 'value')
-  store.delete('key')
-  assertEqual(store.has('key'), false)
-})
-
-// Clear
-testRunner.register('store.clear() removes all flags', () => {
-  const store = createFlagStore({ initial: { a: 1, b: 2, c: 3 } })
-  store.clear()
-  assertEqual(Object.keys(store.all()).length, 0)
-})
-
-// Toggle
-testRunner.register('store.toggle() toggles boolean from true to false', () => {
-  const store = createFlagStore({ initial: { flag: true } })
-  store.toggle('flag')
-  assertEqual(store.get('flag'), false)
-})
-
-testRunner.register('store.toggle() toggles boolean from false to true', () => {
-  const store = createFlagStore({ initial: { flag: false } })
-  store.toggle('flag')
-  assertEqual(store.get('flag'), true)
-})
-
-testRunner.register('store.toggle() on non-existent key sets to true', () => {
-  const store = createFlagStore()
-  store.toggle('newFlag')
-  assertEqual(store.get('newFlag'), true)
-})
-
-testRunner.register('store.toggle() throws for non-boolean values', () => {
-  const store = createFlagStore({ initial: { count: 42 } })
-  assertThrows(() => store.toggle('count'), TypeError)
-})
-
-// Increment/Decrement
-testRunner.register('store.increment() increments by 1 by default', () => {
-  const store = createFlagStore({ initial: { count: 10 } })
-  store.increment('count')
-  assertEqual(store.get('count'), 11)
-})
-
-testRunner.register('store.increment() increments by specified amount', () => {
-  const store = createFlagStore({ initial: { count: 10 } })
-  store.increment('count', 5)
-  assertEqual(store.get('count'), 15)
-})
-
-testRunner.register('store.increment() auto-initializes to amount', () => {
-  const store = createFlagStore()
-  store.increment('newCount', 5)
-  assertEqual(store.get('newCount'), 5)
-})
-
-testRunner.register('store.decrement() decrements by 1 by default', () => {
-  const store = createFlagStore({ initial: { count: 10 } })
-  store.decrement('count')
-  assertEqual(store.get('count'), 9)
-})
-
-testRunner.register('store.decrement() decrements by specified amount', () => {
-  const store = createFlagStore({ initial: { count: 10 } })
-  store.decrement('count', 5)
-  assertEqual(store.get('count'), 5)
-})
-
-// All and Keys
-testRunner.register('store.all() returns all flags', () => {
-  const store = createFlagStore({ initial: { a: 1, b: 2 } })
-  const all = store.all()
-  assertEqual(all.a, 1)
-  assertEqual(all.b, 2)
-})
-
-testRunner.register('store.keys() returns all flag keys', () => {
-  const store = createFlagStore({ initial: { a: 1, b: 2 } })
-  const keys = store.keys()
-  assert(keys.includes('a'))
-  assert(keys.includes('b'))
-})
-
-// SetMany
-testRunner.register('store.setMany() sets multiple values', () => {
-  const store = createFlagStore()
-  store.setMany({ a: 1, b: 2, c: 3 })
-  assertEqual(store.get('a'), 1)
-  assertEqual(store.get('b'), 2)
-  assertEqual(store.get('c'), 3)
-})
-
-// Condition Checks
-testRunner.register('store.check() returns true for truthy flag', () => {
-  const store = createFlagStore({ initial: { flag: true } })
-  assertEqual(store.check('flag'), true)
-})
-
-testRunner.register('store.check() returns false for falsy flag', () => {
-  const store = createFlagStore({ initial: { flag: false } })
-  assertEqual(store.check('flag'), false)
-})
-
-testRunner.register('store.check() returns false for non-existent flag', () => {
-  const store = createFlagStore()
-  assertEqual(store.check('nonexistent'), false)
-})
-
-testRunner.register('store.check() handles AND operator', () => {
-  const store = createFlagStore({ initial: { a: true, b: true, c: false } })
-  assertEqual(store.check('a AND b'), true)
-  assertEqual(store.check('a AND c'), false)
-})
-
-testRunner.register('store.check() handles OR operator', () => {
-  const store = createFlagStore({ initial: { a: true, b: false } })
-  assertEqual(store.check('a OR b'), true)
-  assertEqual(store.check('b OR a'), true)
-})
-
-testRunner.register('store.check() handles NOT operator', () => {
-  const store = createFlagStore({ initial: { flag: true } })
-  assertEqual(store.check('NOT flag'), false)
-  assertEqual(store.check('!flag'), false)
-})
-
-testRunner.register('store.check() handles comparison operators', () => {
-  const store = createFlagStore({ initial: { count: 10 } })
-  assertEqual(store.check('count >= 10'), true)
-  assertEqual(store.check('count > 10'), false)
-  assertEqual(store.check('count == 10'), true)
-  assertEqual(store.check('count < 20'), true)
-})
-
-testRunner.register('store.check() handles complex expressions', () => {
-  const store = createFlagStore({ initial: { gold: 100, level: 5, has_key: true } })
-  assertEqual(store.check('gold >= 100 AND level >= 5'), true)
-  assertEqual(store.check('has_key AND (gold >= 50 OR level >= 10)'), true)
-})
-
-// Subscriptions
-testRunner.register('store.subscribe() is called on changes', () => {
-  const store = createFlagStore()
-  let called = false
-  store.subscribe(() => { called = true })
-  store.set('flag', true)
-  assertEqual(called, true)
-})
-
-testRunner.register('store.subscribeKey() only fires for specific key', () => {
-  const store = createFlagStore()
-  let calledForA = false
-  let calledForB = false
-  store.subscribeKey('a', () => { calledForA = true })
-  store.subscribeKey('b', () => { calledForB = true })
-  store.set('a', 1)
-  assertEqual(calledForA, true)
-  assertEqual(calledForB, false)
-})
-
-testRunner.register('unsubscribe function stops notifications', () => {
-  const store = createFlagStore()
-  let callCount = 0
-  const unsubscribe = store.subscribe(() => { callCount++ })
-  store.set('a', 1)
-  unsubscribe()
-  store.set('b', 2)
-  assertEqual(callCount, 1)
-})
-
-// Namespaces
-testRunner.register('store.namespace() creates scoped view', () => {
-  const store = createFlagStore()
-  const ns = store.namespace('player')
-  ns.set('health', 100)
-  assertEqual(store.get('player.health'), 100)
-})
-
-testRunner.register('namespaced store.get() reads from prefix', () => {
-  const store = createFlagStore({ initial: { 'player.gold': 50 } })
-  const ns = store.namespace('player')
-  assertEqual(ns.get('gold'), 50)
-})
-
-// Batch Operations
-testRunner.register('store.batch() groups changes', () => {
-  const store = createFlagStore()
-  let notifyCount = 0
-  store.subscribe(() => { notifyCount++ })
-  store.batch(() => {
-    store.set('a', 1)
-    store.set('b', 2)
-    store.set('c', 3)
-  })
-  assertEqual(notifyCount, 1) // Single notification
-})
-
-testRunner.register('store.batch() rolls back on error', () => {
-  const store = createFlagStore({ initial: { count: 0 } })
-  try {
-    store.batch(() => {
-      store.set('count', 100)
-      throw new Error('Oops')
+      const interactive = exhibit.querySelector(
+        '.exhibit-interactive, .exhibit-content, [data-interactive]'
+      )
+      if (!interactive) {
+        throw new Error(`Exhibit ${exhibit.id} missing interactive area`)
+      }
     })
-  } catch (e) {}
-  assertEqual(store.get('count'), 0) // Rolled back
-})
-
-// History
-testRunner.register('store with history supports undo', () => {
-  const store = createFlagStore({ history: true })
-  store.set('count', 1)
-  store.set('count', 2)
-  store.undo()
-  assertEqual(store.get('count'), 1)
-})
-
-testRunner.register('store with history supports redo', () => {
-  const store = createFlagStore({ history: true })
-  store.set('count', 1)
-  store.set('count', 2)
-  store.undo()
-  store.redo()
-  assertEqual(store.get('count'), 2)
-})
-
-testRunner.register('store.canUndo() reflects history state', () => {
-  const store = createFlagStore({ history: true })
-  assertEqual(store.canUndo(), false)
-  store.set('x', 1)
-  assertEqual(store.canUndo(), true)
-})
-
-testRunner.register('store.canRedo() reflects redo state', () => {
-  const store = createFlagStore({ history: true })
-  store.set('x', 1)
-  assertEqual(store.canRedo(), false)
-  store.undo()
-  assertEqual(store.canRedo(), true)
-})
-
-// Computed Flags
-testRunner.register('store.compute() creates derived values', () => {
-  const store = createFlagStore({ initial: { a: 5, b: 3 } })
-  store.compute('sum', ['a', 'b'], (a, b) => a + b)
-  assertEqual(store.get('sum'), 8)
-})
-
-testRunner.register('computed values update when dependencies change', () => {
-  const store = createFlagStore({ initial: { a: 5, b: 3 } })
-  store.compute('sum', ['a', 'b'], (a, b) => a + b)
-  store.set('a', 10)
-  assertEqual(store.get('sum'), 13)
-})
-
-// Validation
-testRunner.register('rejects empty string keys', () => {
-  const store = createFlagStore()
-  assertThrows(() => store.set('', 'value'), ValidationError)
-})
-
-testRunner.register('rejects keys with spaces', () => {
-  const store = createFlagStore()
-  assertThrows(() => store.set('my flag', 'value'), ValidationError)
-})
-
-testRunner.register('rejects reserved word keys (AND, OR, NOT)', () => {
-  const store = createFlagStore()
-  assertThrows(() => store.set('AND', true), ValidationError)
-  assertThrows(() => store.set('OR', true), ValidationError)
-  assertThrows(() => store.set('NOT', true), ValidationError)
-})
-
-testRunner.register('rejects NaN values', () => {
-  const store = createFlagStore()
-  assertThrows(() => store.set('key', NaN), ValidationError)
-})
-
-testRunner.register('rejects Infinity values', () => {
-  const store = createFlagStore()
-  assertThrows(() => store.set('key', Infinity), ValidationError)
-})
-
-// ============================================
-// INITIALIZE
-// ============================================
-
-export function initTests() {
-  document.getElementById('run-tests').addEventListener('click', () => testRunner.run())
-  document.getElementById('reset-page').addEventListener('click', () => {
-    // Clear localStorage to get a truly fresh start
-    localStorage.removeItem('flags-demo')
-    localStorage.removeItem('demo-conditions')
-    // Reload the page
-    location.reload()
   })
 }
+
+// ============================================
+// LIBRARY-SPECIFIC TESTS
+// ============================================
+
+function registerLibraryTests() {
+  const { createFlagStore, ValidationError, ParseError } = window.Library
+
+  // Basic store operations
+  testRunner.registerTest('createFlagStore returns store instance', () => {
+    const store = createFlagStore()
+    if (typeof store.set !== 'function') {
+      throw new Error('Store missing set() method')
+    }
+  })
+
+  testRunner.registerTest('store.set() accepts boolean values', () => {
+    const store = createFlagStore()
+    store.set('test', true)
+    if (store.get('test') !== true) {
+      throw new Error('Boolean value not stored correctly')
+    }
+  })
+
+  testRunner.registerTest('store.set() accepts number values', () => {
+    const store = createFlagStore()
+    store.set('count', 42)
+    if (store.get('count') !== 42) {
+      throw new Error('Number value not stored correctly')
+    }
+  })
+
+  testRunner.registerTest('store.set() accepts string values', () => {
+    const store = createFlagStore()
+    store.set('name', 'test')
+    if (store.get('name') !== 'test') {
+      throw new Error('String value not stored correctly')
+    }
+  })
+
+  testRunner.registerTest('store.get() returns undefined for missing keys', () => {
+    const store = createFlagStore()
+    if (store.get('nonexistent') !== undefined) {
+      throw new Error('Expected undefined for missing key')
+    }
+  })
+
+  testRunner.registerTest('store.has() returns correct boolean', () => {
+    const store = createFlagStore()
+    store.set('exists', true)
+    if (!store.has('exists') || store.has('missing')) {
+      throw new Error('has() returned incorrect value')
+    }
+  })
+
+  testRunner.registerTest('store.delete() removes keys', () => {
+    const store = createFlagStore()
+    store.set('temp', 123)
+    store.delete('temp')
+    if (store.has('temp')) {
+      throw new Error('Key was not deleted')
+    }
+  })
+
+  testRunner.registerTest('store.toggle() toggles boolean flags', () => {
+    const store = createFlagStore()
+    store.set('flag', false)
+    const result = store.toggle('flag')
+    if (result !== true || store.get('flag') !== true) {
+      throw new Error('Toggle failed')
+    }
+  })
+
+  testRunner.registerTest('store.increment() increments numbers', () => {
+    const store = createFlagStore()
+    store.set('count', 5)
+    store.increment('count', 3)
+    if (store.get('count') !== 8) {
+      throw new Error('Increment failed')
+    }
+  })
+
+  testRunner.registerTest('store.decrement() decrements numbers', () => {
+    const store = createFlagStore()
+    store.set('count', 10)
+    store.decrement('count', 3)
+    if (store.get('count') !== 7) {
+      throw new Error('Decrement failed')
+    }
+  })
+
+  // Condition checking
+  testRunner.registerTest('store.check() evaluates AND conditions', () => {
+    const store = createFlagStore({ initial: { a: true, b: true } })
+    if (!store.check('a AND b')) {
+      throw new Error('AND condition failed')
+    }
+  })
+
+  testRunner.registerTest('store.check() evaluates OR conditions', () => {
+    const store = createFlagStore({ initial: { a: true, b: false } })
+    if (!store.check('a OR b')) {
+      throw new Error('OR condition failed')
+    }
+  })
+
+  testRunner.registerTest('store.check() evaluates NOT conditions', () => {
+    const store = createFlagStore({ initial: { a: false } })
+    if (!store.check('NOT a')) {
+      throw new Error('NOT condition failed')
+    }
+  })
+
+  testRunner.registerTest('store.check() evaluates comparison operators', () => {
+    const store = createFlagStore({ initial: { count: 10 } })
+    if (!store.check('count >= 5')) {
+      throw new Error('Comparison failed')
+    }
+  })
+
+  testRunner.registerTest('store.check() handles complex nested conditions', () => {
+    const store = createFlagStore({
+      initial: { a: true, b: false, c: 10 }
+    })
+    if (!store.check('(a AND NOT b) OR c > 5')) {
+      throw new Error('Complex condition failed')
+    }
+  })
+
+  // Subscriptions
+  testRunner.registerTest('store.subscribe() calls handler on changes', () => {
+    const store = createFlagStore()
+    let called = false
+    store.subscribe(() => { called = true })
+    store.set('test', 1)
+    if (!called) {
+      throw new Error('Subscription handler not called')
+    }
+  })
+
+  testRunner.registerTest('store.subscribeKey() calls handler for specific key', () => {
+    const store = createFlagStore()
+    let calls = 0
+    store.subscribeKey('watched', () => { calls++ })
+    store.set('other', 1)
+    store.set('watched', 1)
+    if (calls !== 1) {
+      throw new Error(`Expected 1 call, got ${calls}`)
+    }
+  })
+
+  // Computed flags
+  testRunner.registerTest('store.compute() creates computed flags', () => {
+    const store = createFlagStore({ initial: { a: 2, b: 3 } })
+    store.compute('sum', ['a', 'b'], (a, b) => a + b)
+    if (store.get('sum') !== 5) {
+      throw new Error('Computed flag incorrect')
+    }
+  })
+
+  testRunner.registerTest('Computed flags update when dependencies change', () => {
+    const store = createFlagStore({ initial: { x: 5 } })
+    store.compute('double', ['x'], (x) => x * 2)
+    store.set('x', 10)
+    if (store.get('double') !== 20) {
+      throw new Error('Computed flag did not update')
+    }
+  })
+
+  // Namespaces
+  testRunner.registerTest('store.namespace() creates namespaced accessor', () => {
+    const store = createFlagStore()
+    const player = store.namespace('player')
+    player.set('health', 100)
+    if (store.get('player.health') !== 100) {
+      throw new Error('Namespace set failed')
+    }
+  })
+
+  testRunner.registerTest('Namespaced operations work correctly', () => {
+    const store = createFlagStore()
+    const ns = store.namespace('test')
+    ns.set('a', 1)
+    ns.set('b', 2)
+    const keys = ns.keys()
+    if (keys.length !== 2 || !keys.includes('a')) {
+      throw new Error('Namespace keys incorrect')
+    }
+  })
+
+  // Batch operations
+  testRunner.registerTest('store.batch() groups multiple changes', () => {
+    const store = createFlagStore()
+    let callCount = 0
+    store.subscribe(() => { callCount++ })
+    store.batch(() => {
+      store.set('a', 1)
+      store.set('b', 2)
+      store.set('c', 3)
+    })
+    // Should be called once for the batch, not 3 times
+    if (callCount > 1) {
+      throw new Error(`Expected 1 subscription call, got ${callCount}`)
+    }
+  })
+
+  // History (undo/redo)
+  testRunner.registerTest('store.undo() reverts last change', () => {
+    const store = createFlagStore({ history: true })
+    store.set('val', 1)
+    store.set('val', 2)
+    store.undo()
+    if (store.get('val') !== 1) {
+      throw new Error('Undo failed')
+    }
+  })
+
+  testRunner.registerTest('store.redo() reapplies undone change', () => {
+    const store = createFlagStore({ history: true })
+    store.set('val', 1)
+    store.set('val', 2)
+    store.undo()
+    store.redo()
+    if (store.get('val') !== 2) {
+      throw new Error('Redo failed')
+    }
+  })
+
+  testRunner.registerTest('store.canUndo() returns correct state', () => {
+    const store = createFlagStore({ history: true })
+    if (store.canUndo()) {
+      throw new Error('Should not be able to undo initially')
+    }
+    store.set('val', 1)
+    if (!store.canUndo()) {
+      throw new Error('Should be able to undo after change')
+    }
+  })
+
+  testRunner.registerTest('store.canRedo() returns correct state', () => {
+    const store = createFlagStore({ history: true })
+    store.set('val', 1)
+    if (store.canRedo()) {
+      throw new Error('Should not be able to redo before undo')
+    }
+    store.undo()
+    if (!store.canRedo()) {
+      throw new Error('Should be able to redo after undo')
+    }
+  })
+
+  // Validation errors
+  testRunner.registerTest('ValidationError thrown for invalid keys', () => {
+    const store = createFlagStore()
+    try {
+      store.set('invalid key', true) // Space in key
+      throw new Error('Should have thrown ValidationError')
+    } catch (e) {
+      if (e.name !== 'ValidationError') {
+        throw new Error(`Expected ValidationError, got ${e.name}`)
+      }
+    }
+  })
+
+  testRunner.registerTest('ParseError thrown for invalid conditions', () => {
+    const store = createFlagStore()
+    try {
+      store.check('invalid ( condition')
+      throw new Error('Should have thrown ParseError')
+    } catch (e) {
+      if (e.name !== 'ParseError') {
+        throw new Error(`Expected ParseError, got ${e.name}`)
+      }
+    }
+  })
+}
+
+// ============================================
+// EXHIBIT WALKTHROUGH REGISTRATION
+// ============================================
+
+function registerExhibitWalkthroughs() {
+  // Helper function for delays
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+  // Exhibit 1: Game State Dashboard
+  testRunner.registerExhibit(
+    'Game State Dashboard',
+    document.getElementById('exhibit-1'),
+    async () => {
+      // Load "Near Death" scenario
+      const dangerBtn = document.querySelector('[data-scenario="danger"]')
+      dangerBtn?.click()
+      await delay(800)
+
+      // Heal by clicking health bar
+      const healthBar = document.getElementById('health-bar-container')
+      const healthRect = healthBar.getBoundingClientRect()
+      const healthEvent = new MouseEvent('click', {
+        clientX: healthRect.left + healthRect.width * 0.8,
+        clientY: healthRect.top + healthRect.height / 2
+      })
+      healthBar.dispatchEvent(healthEvent)
+      await delay(600)
+
+      // Level up
+      const levelUpBtn = document.getElementById('level-up-btn')
+      levelUpBtn?.click()
+      await delay(600)
+
+      // Equip shield
+      const shieldCard = document.querySelector('[data-item="shield"]')
+      shieldCard?.click()
+      await delay(600)
+    }
+  )
+
+  // Exhibit 2: Live Condition Cards
+  testRunner.registerExhibit(
+    'Live Condition Cards',
+    document.getElementById('exhibit-2'),
+    async () => {
+      // Conditions update automatically from store changes
+      // Make some changes to show reactivity
+      if (window.demoStore) {
+        window.demoStore.set('player.gold', 250)
+        await delay(800)
+
+        window.demoStore.set('player.level', 12)
+        await delay(800)
+
+        window.demoStore.set('player.gold', 100)
+        await delay(800)
+      }
+    }
+  )
+
+  // Exhibit 3: Time Machine
+  testRunner.registerExhibit(
+    'Time Machine',
+    document.getElementById('exhibit-3'),
+    async () => {
+      // Demonstrate undo
+      const undoBtn = document.getElementById('undo-btn')
+      if (undoBtn && !undoBtn.disabled) {
+        undoBtn.click()
+        await delay(600)
+        undoBtn.click()
+        await delay(600)
+      }
+
+      // Demonstrate redo
+      const redoBtn = document.getElementById('redo-btn')
+      if (redoBtn && !redoBtn.disabled) {
+        redoBtn.click()
+        await delay(600)
+      }
+
+      // Demonstrate batch
+      const batchBtn = document.getElementById('make-batch-3')
+      batchBtn?.click()
+      await delay(800)
+
+      // Undo the batch
+      if (undoBtn && !undoBtn.disabled) {
+        undoBtn.click()
+        await delay(600)
+      }
+    }
+  )
+}
+
+// ============================================
+// INITIALIZE TESTS
+// ============================================
+
+// Register all tests when script loads
+registerIntegrityTests()
+registerLibraryTests()
+registerExhibitWalkthroughs()

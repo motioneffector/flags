@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>@motioneffector/flags - Interactive Demo</title>
-  <link rel="stylesheet" href="demo-files/styles.css">
+  <link rel="stylesheet" href="demo-files/demo.css">
 </head>
 <body>
   <div class="page">
@@ -24,7 +24,40 @@
       </nav>
     </header>
 
-    <main class="exhibits">
+    <main>
+      <!-- Test Runner (FIRST) -->
+      <section class="test-runner" id="test-runner">
+        <div class="test-runner-header">
+          <h2 class="test-runner-title">Test Runner</h2>
+        </div>
+        <div class="test-runner-content">
+          <!-- Control bar: progress bar + buttons, above output console -->
+          <div class="test-control-bar">
+            <div class="test-progress">
+              <div class="test-progress-bar">
+                <div class="test-progress-fill" id="progress-fill"></div>
+              </div>
+              <div class="test-progress-text" id="progress-text">Ready</div>
+            </div>
+            <div class="test-runner-actions">
+              <button class="btn btn-primary" id="run-all-tests">
+                <span class="btn-icon">▶</span>
+                <span>Run All Tests</span>
+              </button>
+              <button class="btn btn-secondary" id="reset-page">
+                <span class="btn-icon">↻</span>
+                <span>Reset Page</span>
+              </button>
+            </div>
+          </div>
+          <!-- Output console below the control bar -->
+          <div class="test-output" id="test-output">
+            <div class="test-output-placeholder">Click "Run All Tests" to execute the test suite and see a live demonstration</div>
+          </div>
+          <div class="test-summary hidden" id="test-summary"></div>
+        </div>
+      </section>
+
       <!-- Exhibit 1: Game State Dashboard -->
       <section class="exhibit" id="exhibit-1">
         <div class="exhibit-header">
@@ -228,42 +261,6 @@
         </div>
       </section>
     </main>
-
-    <!-- Test Runner -->
-    <footer class="test-runner">
-      <div class="test-runner-header">
-        <h2 class="test-runner-title">Test Suite</h2>
-        <div class="test-runner-actions">
-          <button class="btn btn-primary" id="run-tests">Run All Tests</button>
-          <button class="btn btn-secondary" id="reset-page">Reset Page</button>
-        </div>
-      </div>
-      <div class="test-runner-content">
-        <div class="test-progress">
-          <div class="test-progress-bar">
-            <div class="test-progress-fill" id="progress-fill"></div>
-          </div>
-          <div class="test-progress-text" id="progress-text">Ready to run tests</div>
-        </div>
-        <div class="test-output" id="test-output">
-          <div class="test-output-empty">Click "Run Tests" to execute the test suite</div>
-        </div>
-        <div class="test-summary hidden" id="test-summary">
-          <div class="test-summary-item passed">
-            <span>✓</span>
-            <span id="passed-count">0</span> passed
-          </div>
-          <div class="test-summary-item failed">
-            <span>✗</span>
-            <span id="failed-count">0</span> failed
-          </div>
-          <div class="test-summary-item skipped">
-            <span>○</span>
-            <span id="skipped-count">0</span> skipped
-          </div>
-        </div>
-      </div>
-    </footer>
   </div>
 
   <!-- Add Condition Modal -->
@@ -305,7 +302,15 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script type="module" src="demo-files/main.js"></script>
+  <!-- Library (from dist) -->
+  <script type="module">
+    import * as Library from './dist/index.js'
+    window.Library = Library
+  </script>
+
+  <!-- Demo scripts (order matters) -->
+  <script src="demo-files/test-runner.js"></script>
+  <script src="demo-files/demo.js"></script>
+  <script src="demo-files/tests.js"></script>
 </body>
 </html>
