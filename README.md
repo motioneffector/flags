@@ -19,7 +19,7 @@ A TypeScript library for managing application state with powerful condition eval
 - **Namespacing** - Organize flags into logical scoped groups
 - **Batch Operations** - Atomic updates with automatic rollback
 
-[Read the full manual →](https://github.com/motioneffector/flags/wiki)
+[Read the full manual →](https://motioneffector.github.io/flags/manual/)
 
 ## Quick Start
 
