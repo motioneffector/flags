@@ -4,1031 +4,313 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>@motioneffector/flags - Interactive Demo</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #f5f5f5;
-      color: #333;
-    }
-    h1 {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 30px;
-      margin: -20px -20px 20px -20px;
-      border-radius: 8px;
-    }
-    h2 {
-      color: #667eea;
-      border-bottom: 2px solid #667eea;
-      padding-bottom: 8px;
-    }
-    section {
-      margin: 20px 0;
-      padding: 25px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .test-pass { color: #22c55e; font-weight: 500; }
-    .test-fail { color: #ef4444; font-weight: bold; }
-    .test-output {
-      background: #1e293b;
-      color: #e2e8f0;
-      padding: 15px;
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 13px;
-      white-space: pre-wrap;
-      max-height: 500px;
-      overflow-y: auto;
-      border-radius: 4px;
-      margin-top: 15px;
-    }
-    button {
-      padding: 10px 20px;
-      margin: 4px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    button:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-    button:active { transform: translateY(0); }
-    .run-all {
-      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-      color: white;
-      font-size: 16px;
-      padding: 14px 28px;
-    }
-    .clear-btn { background: #6b7280; color: white; }
-    .demo-btn { background: #667eea; color: white; }
-    .summary {
-      font-size: 20px;
-      font-weight: bold;
-      margin-top: 15px;
-      padding: 15px;
-      border-radius: 6px;
-      background: #f8fafc;
-    }
-    .input-group { margin: 15px 0; }
-    .input-group label { display: inline-block; width: 150px; font-weight: 500; }
-    .input-group input, .input-group textarea {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      width: 300px;
-    }
-    .output-box {
-      background: #f8fafc;
-      padding: 15px;
-      margin-top: 10px;
-      border-radius: 4px;
-      border: 1px solid #e2e8f0;
-      font-family: monospace;
-      min-height: 60px;
-    }
-    .flex { display: flex; gap: 10px; flex-wrap: wrap; }
-    code {
-      background: #f1f5f9;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-family: monospace;
-    }
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-left: 8px;
-    }
-    .badge-success { background: #22c55e; color: white; }
-    .badge-error { background: #ef4444; color: white; }
-  </style>
+  <link rel="stylesheet" href="demo-files/demo.css">
 </head>
 <body>
-  <h1>@motioneffector/flags - Interactive Demo</h1>
-  <p style="font-size: 16px; color: #64748b; margin: -10px 0 20px 0;">
-    A powerful feature flag and game state management library with condition evaluation,
-    history tracking, persistence, and more.
-  </p>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">A TypeScript library for managing application state with powerful condition evaluation and reactive subscriptions.</p>
+      <nav class="header-links">
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link" target="_blank">
+          <span>📦</span> npm
+        </a>
+        <a href="https://github.com/motioneffector/flags" class="header-link" target="_blank">
+          <span>💻</span> GitHub
+        </a>
+        <a href="https://github.com/motioneffector/flags/wiki" class="header-link" target="_blank">
+          <span>📖</span> Manual
+        </a>
+      </nav>
+    </header>
 
-  <!-- TEST RUNNER -->
-  <section id="test-runner">
-    <h2>🧪 Automated Test Runner</h2>
-    <p>Run comprehensive tests covering all library features:</p>
-    <div class="flex">
-      <button class="run-all" onclick="runAllTests()">▶ Run All Tests</button>
-      <button class="clear-btn" onclick="clearResults()">Clear Results</button>
-    </div>
-    <div class="summary" id="summary"></div>
-    <div class="test-output" id="test-output"></div>
-  </section>
+    <main>
+      <!-- Test Runner (FIRST) -->
+      <section class="test-runner" id="test-runner">
+        <div class="test-runner-header">
+          <h2 class="test-runner-title">Test Runner</h2>
+        </div>
+        <div class="test-runner-content">
+          <!-- Control bar: progress bar + buttons, above output console -->
+          <div class="test-control-bar">
+            <div class="test-progress">
+              <div class="test-progress-bar">
+                <div class="test-progress-fill" id="progress-fill"></div>
+              </div>
+              <div class="test-progress-text" id="progress-text">Ready</div>
+            </div>
+            <div class="test-runner-actions">
+              <button class="btn btn-primary" id="run-all-tests">
+                <span class="btn-icon">▶</span>
+                <span>Run All Tests</span>
+              </button>
+              <button class="btn btn-secondary" id="reset-page">
+                <span class="btn-icon">↻</span>
+                <span>Reset Page</span>
+              </button>
+            </div>
+          </div>
+          <!-- Output console below the control bar -->
+          <div class="test-output" id="test-output">
+            <div class="test-output-placeholder">Click "Run All Tests" to execute the test suite and see a live demonstration</div>
+          </div>
+          <div class="test-summary hidden" id="test-summary"></div>
+        </div>
+      </section>
 
-  <!-- BASIC OPERATIONS -->
-  <section>
-    <h2>📝 Basic Operations</h2>
-    <p>Set, get, and manipulate flag values:</p>
-    <div class="input-group">
-      <label>Key:</label>
-      <input type="text" id="basic-key" value="gameMode" />
-    </div>
-    <div class="input-group">
-      <label>Value:</label>
-      <input type="text" id="basic-value" value="adventure" />
-    </div>
-    <div class="flex">
-      <button class="demo-btn" onclick="basicSet()">Set Flag</button>
-      <button class="demo-btn" onclick="basicGet()">Get Flag</button>
-      <button class="demo-btn" onclick="basicHas()">Has Flag</button>
-      <button class="demo-btn" onclick="basicDelete()">Delete Flag</button>
-      <button class="demo-btn" onclick="basicClear()">Clear All</button>
-    </div>
-    <div class="output-box" id="basic-output">Output will appear here...</div>
-  </section>
+      <!-- Exhibit 1: Game State Dashboard -->
+      <section class="exhibit" id="exhibit-1">
+        <div class="exhibit-header">
+          <h2 class="exhibit-title">Game State Dashboard</h2>
+          <p class="exhibit-description">Direct manipulation of flag values. Click, drag, and tap to change state - watch everything react in real-time.</p>
+        </div>
+        <div class="exhibit-content">
+          <!-- Preset Scenarios -->
+          <div class="scenario-buttons">
+            <span class="scenario-label">Load a scenario:</span>
+            <button class="btn btn-secondary btn-small" data-scenario="fresh">🆕 Fresh Start</button>
+            <button class="btn btn-secondary btn-small" data-scenario="danger">💀 Near Death</button>
+            <button class="btn btn-secondary btn-small" data-scenario="rich">💰 Rich Merchant</button>
+            <button class="btn btn-secondary btn-small" data-scenario="battle">⚔️ Battle Ready</button>
+          </div>
 
-  <!-- CONVENIENCE METHODS -->
-  <section>
-    <h2>⚡ Convenience Methods</h2>
-    <p>Toggle booleans, increment/decrement numbers:</p>
-    <div class="flex">
-      <button class="demo-btn" onclick="toggleDemo()">Toggle 'darkMode'</button>
-      <button class="demo-btn" onclick="incrementDemo()">Increment 'score'</button>
-      <button class="demo-btn" onclick="decrementDemo()">Decrement 'lives'</button>
-    </div>
-    <div class="output-box" id="convenience-output">Output will appear here...</div>
-  </section>
+          <div class="exhibit-interactive" id="game-dashboard">
+            <!-- Player Stats -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-icon">❤️</span>
+                  <span class="stat-label">HEALTH</span>
+                  <span class="stat-value" id="health-value">75</span>
+                </div>
+                <div class="stat-bar-container" id="health-bar-container">
+                  <div class="stat-bar health-bar" id="health-bar" style="width: 75%"></div>
+                </div>
+                <div class="stat-hint">Click bar to set health</div>
+              </div>
 
-  <!-- CONDITION EVALUATION -->
-  <section>
-    <h2>🔍 Condition Evaluation</h2>
-    <p>Evaluate complex boolean expressions with AND, OR, NOT operators:</p>
-    <div class="input-group">
-      <label>Condition:</label>
-      <input type="text" id="condition-input" value="darkMode and (score > 100 or isAdmin)" style="width: 400px;" />
-    </div>
-    <button class="demo-btn" onclick="checkCondition()">Evaluate Condition</button>
-    <button class="demo-btn" onclick="setupConditionFlags()">Setup Test Flags</button>
-    <div class="output-box" id="condition-output">
-      Click "Setup Test Flags" first to set darkMode=true, score=150, isAdmin=false
-    </div>
-  </section>
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-icon">💰</span>
+                  <span class="stat-label">GOLD</span>
+                  <span class="stat-value" id="gold-value">150</span>
+                </div>
+                <div class="stat-bar-container" id="gold-bar-container">
+                  <div class="stat-bar gold-bar" id="gold-bar" style="width: 15%"></div>
+                </div>
+                <div class="stat-hint">Drag to adjust gold (0-1000)</div>
+              </div>
 
-  <!-- SUBSCRIPTIONS -->
-  <section>
-    <h2>📡 Change Subscriptions</h2>
-    <p>Subscribe to flag changes and receive notifications:</p>
-    <div class="flex">
-      <button class="demo-btn" onclick="subscribeDemo()">Subscribe to All Changes</button>
-      <button class="demo-btn" onclick="subscribeKeyDemo()">Subscribe to 'playerName'</button>
-      <button class="demo-btn" onclick="triggerChange()">Trigger Change</button>
-      <button class="demo-btn" onclick="unsubscribeDemo()">Unsubscribe All</button>
-    </div>
-    <div class="output-box" id="subscription-output">Output will appear here...</div>
-  </section>
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-icon">⭐</span>
+                  <span class="stat-label">LEVEL</span>
+                  <span class="stat-value level-badge" id="level-value">5</span>
+                </div>
+                <button class="btn btn-secondary level-up-btn" id="level-up-btn">Level Up!</button>
+                <div class="stat-hint">Click to level up</div>
+              </div>
 
-  <!-- HISTORY/UNDO -->
-  <section>
-    <h2>⏮️ History & Undo/Redo</h2>
-    <p>Track changes and undo/redo operations:</p>
-    <div class="flex">
-      <button class="demo-btn" onclick="historySetup()">Setup History Store</button>
-      <button class="demo-btn" onclick="makeChanges()">Make 3 Changes</button>
-      <button class="demo-btn" onclick="undoDemo()">Undo</button>
-      <button class="demo-btn" onclick="redoDemo()">Redo</button>
-      <button class="demo-btn" onclick="clearHistoryDemo()">Clear History</button>
-    </div>
-    <div class="output-box" id="history-output">Click "Setup History Store" first...</div>
-  </section>
+              <div class="stat-card">
+                <div class="stat-header">
+                  <span class="stat-icon">📊</span>
+                  <span class="stat-label">REPUTATION</span>
+                  <span class="stat-value" id="reputation-value">80</span>
+                </div>
+                <div class="stat-bar-container" id="reputation-bar-container">
+                  <div class="stat-bar reputation-bar" id="reputation-bar" style="width: 80%"></div>
+                </div>
+                <div class="stat-hint">Click bar to set reputation</div>
+              </div>
+            </div>
 
-  <!-- PERSISTENCE -->
-  <section>
-    <h2>💾 Persistence</h2>
-    <p>Save and load flag state to localStorage:</p>
-    <div class="flex">
-      <button class="demo-btn" onclick="persistSetup()">Create Store with Persistence</button>
-      <button class="demo-btn" onclick="persistSave()">Save to Storage</button>
-      <button class="demo-btn" onclick="persistLoad()">Load from Storage</button>
-      <button class="demo-btn" onclick="persistClear()">Clear Storage</button>
-    </div>
-    <div class="output-box" id="persist-output">Output will appear here...</div>
-  </section>
+            <!-- Inventory -->
+            <div class="inventory-section">
+              <h3 class="section-title">Inventory</h3>
+              <div class="inventory-grid">
+                <div class="item-card" data-item="sword">
+                  <span class="item-icon">⚔️</span>
+                  <span class="item-name">Sword</span>
+                  <span class="item-weight">3kg</span>
+                  <div class="item-status equipped">Equipped</div>
+                </div>
+                <div class="item-card" data-item="shield">
+                  <span class="item-icon">🛡️</span>
+                  <span class="item-name">Shield</span>
+                  <span class="item-weight">5kg</span>
+                  <div class="item-status">Unequipped</div>
+                </div>
+                <div class="item-card" data-item="key">
+                  <span class="item-icon">🔑</span>
+                  <span class="item-name">Key</span>
+                  <span class="item-weight">1kg</span>
+                  <div class="item-status equipped">Equipped</div>
+                </div>
+                <div class="item-card" data-item="potion">
+                  <span class="item-icon">🧪</span>
+                  <span class="item-name">Potion</span>
+                  <span class="item-weight">1kg</span>
+                  <div class="item-status">Unequipped</div>
+                </div>
+              </div>
+              <div class="weight-display">
+                <span class="weight-label">Weight:</span>
+                <div class="weight-bar-container">
+                  <div class="weight-bar" id="weight-bar" style="width: 40%"></div>
+                </div>
+                <span class="weight-value" id="weight-value">4/10 kg</span>
+              </div>
+            </div>
 
-  <!-- NAMESPACING -->
-  <section>
-    <h2>🗂️ Namespacing</h2>
-    <p>Organize flags with namespace prefixes:</p>
-    <div class="flex">
-      <button class="demo-btn" onclick="namespaceDemo()">Create 'player' Namespace</button>
-      <button class="demo-btn" onclick="namespaceSet()">Set player.level = 5</button>
-      <button class="demo-btn" onclick="namespaceGet()">Get player.level</button>
-      <button class="demo-btn" onclick="namespaceKeys()">List player.* Keys</button>
-    </div>
-    <div class="output-box" id="namespace-output">Output will appear here...</div>
-  </section>
+            <!-- Status Effects -->
+            <div class="status-section">
+              <h3 class="section-title">Status Effects</h3>
+              <div class="status-grid">
+                <div class="status-card active" data-status="healthy">
+                  <span class="status-icon">🟢</span>
+                  <span class="status-name">Healthy</span>
+                </div>
+                <div class="status-card" data-status="poisoned">
+                  <span class="status-icon">☠️</span>
+                  <span class="status-name">Poisoned</span>
+                </div>
+                <div class="status-card" data-status="blessed">
+                  <span class="status-icon">✨</span>
+                  <span class="status-name">Blessed</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-  <!-- BATCH OPERATIONS -->
-  <section>
-    <h2>📦 Batch Operations</h2>
-    <p>Execute multiple changes atomically with single notification:</p>
-    <div class="flex">
-      <button class="demo-btn" onclick="batchDemo()">Batch Update (5 changes)</button>
-      <button class="demo-btn" onclick="batchRollback()">Batch with Error (rollback)</button>
-    </div>
-    <div class="output-box" id="batch-output">Output will appear here...</div>
-  </section>
+          <!-- Raw State Display -->
+          <div class="exhibit-state">
+            <div class="exhibit-state-header">
+              <div class="exhibit-state-title">Raw Flag State (live)</div>
+              <button class="btn btn-small btn-secondary" id="toggle-state">Collapse</button>
+            </div>
+            <pre class="state-display" id="raw-state"></pre>
+          </div>
+        </div>
+      </section>
 
-  <!-- COMPUTED FLAGS -->
-  <section>
-    <h2>🧮 Computed Flags</h2>
-    <p>Create derived flags that auto-update when dependencies change:</p>
-    <div class="flex">
-      <button class="demo-btn" onclick="computedSetup()">Setup Computed Flag</button>
-      <button class="demo-btn" onclick="computedUpdate()">Update Dependencies</button>
-      <button class="demo-btn" onclick="computedGet()">Get Computed Value</button>
-    </div>
-    <div class="output-box" id="computed-output">
-      Will create 'fullName' computed from 'firstName' + 'lastName'
-    </div>
-  </section>
+      <!-- Exhibit 2: Live Condition Cards -->
+      <section class="exhibit" id="exhibit-2">
+        <div class="exhibit-header">
+          <h2 class="exhibit-title">Live Condition Cards</h2>
+          <p class="exhibit-description">Watch conditions evaluate in real-time as you change the game state above. See exactly WHY each condition passes or fails.</p>
+        </div>
+        <div class="exhibit-content">
+          <div class="exhibit-interactive" id="condition-cards">
+            <div class="conditions-grid" id="conditions-grid">
+              <!-- Condition cards will be rendered here -->
+            </div>
+            <button class="btn btn-primary" id="add-condition-btn">+ Add Condition</button>
+          </div>
+        </div>
+      </section>
 
-  <!-- ============================================ -->
-  <!-- INLINED LIBRARY CODE (from dist/index.js) -->
-  <!-- ============================================ -->
-  <script>
-var J=Object.defineProperty;var Z=(o,e,s)=>e in o?J(o,e,{enumerable:!0,configurable:!0,writable:!0,value:s}):o[e]=s;var T=(o,e,s)=>Z(o,typeof e!="symbol"?e+"":e,s);class j extends Error{constructor(e){super(e),this.name="FlagsError",Object.setPrototypeOf(this,new.target.prototype)}}class N extends j{constructor(e,s){super(e),this.field=s,this.name="ValidationError"}}class g extends j{constructor(e,s,h){super(e),this.position=s,this.input=h,this.name="ParseError"}}class Y{constructor(e){T(this,"input");T(this,"position",0);T(this,"currentChar");this.input=e,this.currentChar=e.length>0?e[0]??null:null}advance(){this.position++,this.currentChar=this.position<this.input.length?this.input[this.position]??null:null}peek(e=1){const s=this.position+e;return s<this.input.length?this.input[s]??null:null}skipWhitespace(){for(;this.currentChar!==null&&/\s/.test(this.currentChar);)this.advance()}readString(e){let s="";for(this.advance();this.currentChar!==null&&this.currentChar!==e;){const h=this.currentChar;if(h==="\\"){this.advance();const u=this.currentChar;if(!u)throw new g("Unterminated string escape",this.position,this.input);switch(u){case"n":s+=`
-`;break;case"t":s+="	";break;case"r":s+="\r";break;default:s+=u}this.advance()}else s+=h,this.advance()}if(this.currentChar!==e)throw new g("Unterminated string literal",this.position,this.input);return this.advance(),s}readNumber(){const e=this.position;let s=!1;for(this.currentChar==="-"&&this.advance();this.currentChar!==null&&/[0-9.]/.test(this.currentChar);){if(this.currentChar==="."){if(s)throw new g("Invalid number format",e,this.input);s=!0}this.advance()}return this.input.slice(e,this.position)}readIdentifier(){const e=this.position;for(;this.currentChar!==null&&/[a-zA-Z0-9_.-]/.test(this.currentChar);)this.advance();return this.input.slice(e,this.position)}tokenize(){const e=[];for(;this.currentChar!==null&&(this.skipWhitespace(),!!this.currentChar);){const s=this.position;if(this.currentChar==='"'||this.currentChar==="'"){const u=this.currentChar,l=this.readString(u);e.push({type:"STRING",value:l,position:s});continue}if(this.currentChar==="("){e.push({type:"LPAREN",value:"(",position:s}),this.advance();continue}if(this.currentChar===")"){e.push({type:"RPAREN",value:")",position:s}),this.advance();continue}if(this.currentChar==="!")if(this.peek()==="="){e.push({type:"NEQ",value:"!=",position:s}),this.advance(),this.advance();continue}else{e.push({type:"NOT",value:"!",position:s}),this.advance();continue}if(this.currentChar==="="&&this.peek()==="="){e.push({type:"EQ",value:"==",position:s}),this.advance(),this.advance();continue}if(this.currentChar===">")if(this.peek()==="="){e.push({type:"GTE",value:">=",position:s}),this.advance(),this.advance();continue}else{e.push({type:"GT",value:">",position:s}),this.advance();continue}if(this.currentChar==="<")if(this.peek()==="="){e.push({type:"LTE",value:"<=",position:s}),this.advance(),this.advance();continue}else{e.push({type:"LT",value:"<",position:s}),this.advance();continue}const h=this.peek();if(this.currentChar==="-"&&h!==null&&/[0-9]/.test(h)){const u=this.readNumber();e.push({type:"NUMBER",value:u,position:s});continue}if(/[a-zA-Z0-9_.-]/.test(this.currentChar)){const u=this.readIdentifier(),l=u.toLowerCase();l==="true"||l==="false"?e.push({type:"BOOLEAN",value:l,position:s}):l==="and"?e.push({type:"AND",value:"AND",position:s}):l==="or"?e.push({type:"OR",value:"OR",position:s}):l==="not"?e.push({type:"NOT",value:"NOT",position:s}):/^[0-9]/.test(u)?e.push({type:"NUMBER",value:u,position:s}):e.push({type:"IDENTIFIER",value:u,position:s});continue}throw new g(`Unexpected character '${this.currentChar}'`,this.position,this.input)}return e.push({type:"EOF",value:"",position:this.position}),e}}class X{constructor(e,s){T(this,"tokens");T(this,"current",0);T(this,"getFlagValue");this.tokens=e,this.getFlagValue=s}currentToken(){return this.tokens[this.current]}peek(){return this.tokens[this.current+1]??this.tokens[this.tokens.length-1]}advance(){const e=this.currentToken();return this.current++,e}expect(e){var h;const s=this.currentToken();if(s.type!==e)throw new g(`Expected ${e}, got ${s.type}`,s.position,((h=this.tokens[0])==null?void 0:h.value)??"");return this.advance()}isAtEnd(){return this.currentToken().type==="EOF"}parse(){if(this.isAtEnd())throw new g("Condition cannot be empty",0,"");const e=this.parseOrExpr();if(!this.isAtEnd()){const s=this.currentToken();throw new g(`Unexpected token: ${s.value}`,s.position,"")}return e}parseOrExpr(){let e=this.parseAndExpr();for(;this.currentToken().type==="OR";){this.advance();const s=this.parseAndExpr();e=e||s}return e}parseAndExpr(){let e=this.parseComparison();for(;this.currentToken().type==="AND";){this.advance();const s=this.parseComparison();e=e&&s}return e}parseComparison(){const e=this.parseUnary(),s=this.currentToken();if(s.type==="EQ"||s.type==="NEQ"||s.type==="GT"||s.type==="LT"||s.type==="GTE"||s.type==="LTE"){const h=this.advance(),u=this.parseUnary();return this.evaluateComparison(e,h.type,u)}return this.isTruthy(e)}parseUnary(){if(this.currentToken().type==="NOT"){this.advance();const s=this.parseUnary();return!this.isTruthy(s)}return this.parsePrimary()}parsePrimary(){const e=this.currentToken();if(e.type==="LPAREN"){this.advance();const s=this.parseOrExpr();return this.expect("RPAREN"),s}if(e.type==="IDENTIFIER")return this.advance(),this.getFlagValue(e.value);if(e.type==="NUMBER")return this.advance(),parseFloat(e.value);if(e.type==="STRING")return this.advance(),e.value;if(e.type==="BOOLEAN")return this.advance(),e.value==="true";throw e.type==="RPAREN"?new g("Unexpected closing parenthesis",e.position,""):e.type==="EOF"?new g("Unexpected end of expression",e.position,""):new g(`Unexpected token: ${e.value}`,e.position,"")}isTruthy(e){return typeof e=="boolean"?e:!(e===void 0||e===0||e==="")}evaluateComparison(e,s,h){const u=e??0,l=h??0,b=typeof u,d=typeof l;if(s==="EQ")return b!==d?!1:u===l;if(s==="NEQ")return b!==d?!1:u!==l;if(b==="string"&&d==="string")throw new g("String ordering not supported for strings",0,"");if(b==="string"||d==="string"||b!=="number"||d!=="number")return!1;const m=u,w=l;switch(s){case"GT":return m>w;case"LT":return m<w;case"GTE":return m>=w;case"LTE":return m<=w;default:throw new g(`Unknown operator: ${s}`,0,"")}}}function q(o,e){const s=o.trim();if(s==="")throw new g("Condition cannot be empty",0,o);const u=new Y(s).tokenize();return new X(u,e).parse()}const tt="@motioneffector/flags",G=100,et=["and","or","not"],rt=[">","<",">=","<=","==","!=","!"];function v(o){if(o==="")throw new N("Key cannot be empty","key");if(o.includes(" "))throw new N(`Key cannot contain spaces. Received: "${o}"`,"key");if(o.startsWith("!"))throw new N(`Key cannot start with '!'. Received: "${o}"`,"key");for(const s of rt)if(o.includes(s))throw new N(`Key cannot contain comparison operators. Received: "${o}"`,"key");const e=o.toLowerCase();if(et.includes(e))throw new N(`Key cannot be a reserved word (AND, OR, NOT). Received: "${o}"`,"key")}function V(o){const e=typeof o;if(e!=="boolean"&&e!=="number"&&e!=="string")throw new N(`Value must be boolean, number, or string. Received: ${e}`,"value")}function it(o){var L,P,W;const e=new Map,s=new Map,h=[],u=new Map,l=(o==null?void 0:o.history)!==void 0&&o.history!==!1,b=typeof(o==null?void 0:o.history)=="object"?o.history.maxHistory??G:G,d=[],m=[],w=(o==null?void 0:o.persist)!==void 0,y=(L=o==null?void 0:o.persist)==null?void 0:L.storage,F=((P=o==null?void 0:o.persist)==null?void 0:P.key)??tt,z=((W=o==null?void 0:o.persist)==null?void 0:W.autoSave)!==!1;let p=0,O=null,R=[];function _(){return new Map(e)}function x(t){const n=[];for(const[r,i]of e.entries())!t.has(r)&&!s.has(r)&&n.push({key:r,newValue:void 0,oldValue:i});for(const[r,i]of t.entries()){const a=e.get(r);a!==i&&n.push({key:r,newValue:i,oldValue:a})}e.clear();for(const[r,i]of t.entries())e.set(r,i);U();for(const r of n)E(r.key,r.newValue,r.oldValue)}function S(){if(!l)return;const t=_();d.push({state:t}),d.length>b&&d.shift(),m.length=0}function E(t,n,r){if(p>0){R.push({key:t,newValue:n,oldValue:r});return}H(t,n,r)}function H(t,n,r){I(t,n,r),K(t,n,r)}function I(t,n,r){const i=[...h];for(const a of i)if(h.includes(a))try{a(t,n,r)}catch(f){console.error("Subscriber error:",f)}}function K(t,n,r){const i=u.get(t);if(i){const a=[...i];for(const f of a)if(i.includes(f))try{f(n,r)}catch($){console.error("Key subscriber error:",$)}}}function C(){if(!(!w||!y||!z))try{const t={};for(const[n,r]of e.entries())t[n]=r;y.setItem(F,JSON.stringify(t))}catch(t){console.error("Failed to persist state:",t)}}function Q(){if(!(!w||!y))try{const t=y.getItem(F);if(t===null)return;const n=JSON.parse(t);for(const[r,i]of Object.entries(n))v(r),V(i),e.set(r,i)}catch(t){console.error("Failed to load state from storage:",t)}}function D(t){const n=s.get(t);if(n)try{const r=n.dependencies.map(f=>e.get(f));let i=n.fn(...r);typeof i=="number"&&isNaN(i)&&(i=0);const a=e.get(t);i!==a&&(e.set(t,i),E(t,i,a))}catch(r){console.error(`Error computing flag '${t}':`,r)}}function k(t){for(const[n,r]of s.entries())r.dependencies.includes(t)&&D(n)}function U(){for(const t of s.keys())D(t)}function A(t){return s.has(t)}if(o!=null&&o.initial)for(const[t,n]of Object.entries(o.initial))v(t),V(n),e.set(t,n);Q();const c={set(t,n){if(t=t.trim(),v(t),A(t))throw new Error(`Cannot set computed flag: ${t}`);if(n==null)return c.delete(t);V(n);const r=e.get(t);return p===0&&S(),e.set(t,n),k(t),E(t,n,r),p===0&&C(),c},get(t){return t=t.trim(),e.get(t)},has(t){return t=t.trim(),e.has(t)},delete(t){if(t=t.trim(),A(t))throw new Error(`Cannot delete computed flag: ${t}`);const n=e.get(t);return e.has(t)&&(p===0&&S(),e.delete(t),k(t),E(t,void 0,n),p===0&&C()),c},clear(){return p===0&&S(),e.clear(),U(),E("__clear__",void 0,void 0),p===0&&C(),c},toggle(t){if(t=t.trim(),v(t),A(t))throw new Error(`Cannot toggle computed flag: ${t}`);const n=e.get(t);if(n===void 0)return c.set(t,!0),!0;if(typeof n!="boolean")throw new TypeError(`Cannot toggle non-boolean flag: ${t}`);const r=!n;return c.set(t,r),r},increment(t,n=1){if(t=t.trim(),v(t),A(t))throw new Error(`Cannot increment computed flag: ${t}`);const r=e.get(t);if(r===void 0){const a=n;return c.set(t,a),a}if(typeof r!="number")throw new TypeError(`Cannot increment non-numeric flag: ${t}`);const i=r+n;return c.set(t,i),i},decrement(t,n=1){if(t=t.trim(),v(t),A(t))throw new Error(`Cannot decrement computed flag: ${t}`);const r=e.get(t);if(r===void 0){const a=-n;return c.set(t,a),a}if(typeof r!="number")throw new TypeError(`Cannot decrement non-numeric flag: ${t}`);const i=r-n;return c.set(t,i),i},all(){const t={};for(const[n,r]of e.entries())t[n]=r;return t},keys(){return Array.from(e.keys())},setMany(t){for(const n of Object.keys(t)){const r=n.trim();v(r)}p===0&&S();for(const[n,r]of Object.entries(t)){const i=n.trim();r==null?e.has(i)&&(e.delete(i),k(i)):(V(r),e.set(i,r),k(i))}return E("__setMany__",void 0,void 0),p===0&&C(),c},check(t){return q(t,n=>c.get(n))},subscribe(t){h.push(t);let n=!1;return()=>{if(n)return;n=!0;const r=h.indexOf(t);r!==-1&&h.splice(r,1)}},subscribeKey(t,n){t=t.trim(),u.has(t)||u.set(t,[]);const r=u.get(t);r==null||r.push(n);let i=!1;return()=>{if(i)return;i=!0;const a=u.get(t);if(a){const f=a.indexOf(n);f!==-1&&a.splice(f,1),a.length===0&&u.delete(t)}}},namespace(t){t=t.trim();const n={set(r,i){return c.set(`${t}.${r}`,i),n},get(r){return c.get(`${t}.${r}`)},has(r){return c.has(`${t}.${r}`)},delete(r){return c.delete(`${t}.${r}`),n},clear(){const r=c.keys().filter(i=>i.startsWith(`${t}.`));for(const i of r)c.delete(i);return n},toggle(r){return c.toggle(`${t}.${r}`)},increment(r,i){return c.increment(`${t}.${r}`,i)},decrement(r,i){return c.decrement(`${t}.${r}`,i)},all(){const r={},i=`${t}.`;for(const[a,f]of e.entries())if(a.startsWith(i)){const $=a.slice(i.length);r[$]=f}return r},keys(){const r=`${t}.`;return c.keys().filter(i=>i.startsWith(r)).map(i=>i.slice(r.length))},setMany(r){const i={};for(const[a,f]of Object.entries(r))i[`${t}.${a}`]=f;return c.setMany(i),n},check(r){return c.check(nt(r,t))},subscribe(r){const i=(a,f,$)=>{const M=`${t}.`;if(a.startsWith(M)){const B=a.slice(M.length);r(B,f,$)}};return c.subscribe(i)},subscribeKey(r,i){return c.subscribeKey(`${t}.${r}`,i)},namespace(r){return c.namespace(`${t}.${r}`)},batch(r){return c.batch(r)},compute(r,i,a){const f=i.map($=>`${t}.${$}`);c.compute(`${t}.${r}`,f,a)}};return n},batch(t){p++,p===1&&(O=_(),R=[],S());try{const n=t();if(p--,p===0){for(const r of R)K(r.key,r.newValue,r.oldValue);I("__batch__",void 0,void 0),C(),O=null,R=[]}return n}catch(n){if(p===1&&O){e.clear();for(const[r,i]of O.entries())e.set(r,i);U()}throw p--,p===0&&(O=null,R=[]),n}},compute(t,n,r){if(t=t.trim(),v(t),n.includes(t))throw new Error(`Computed flag cannot depend on itself: ${t}`);for(const i of n){const a=s.get(i);if(a!=null&&a.dependencies.includes(t))throw new Error(`Circular dependency detected: ${t} <-> ${i}`)}s.set(t,{dependencies:n,fn:r}),D(t)}};if(l){const t=c;t.undo=()=>{if(d.length===0)return!1;const n=_();m.push({state:n});const r=d.pop();return r&&(x(r.state),C()),!0},t.redo=()=>{if(m.length===0)return!1;const n=_();d.push({state:n});const r=m.pop();return r&&(x(r.state),C()),!0},t.canUndo=()=>d.length>0,t.canRedo=()=>m.length>0,t.clearHistory=()=>{d.length=0,m.length=0}}if(w){const t=c;t.save=()=>{if(y)try{const n={};for(const[r,i]of e.entries())n[r]=i;y.setItem(F,JSON.stringify(n))}catch(n){console.error("Failed to save state:",n)}},t.load=()=>{if(y)try{const n=y.getItem(F);if(n===null)return;const r=JSON.parse(n);e.clear();for(const[i,a]of Object.entries(r)){const f=e.get(i);v(i),V(a),e.set(i,a),E(i,a,f)}U()}catch(n){console.error("Failed to load state:",n)}}}return c}function nt(o,e){const s=o.match(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\b(?:AND|OR|NOT|and|or|not|true|false|TRUE|FALSE)\b|\d+\.?\d*|[a-zA-Z_][a-zA-Z0-9_.-]*|[()!<>=]+)/gi);if(!s)return o;const h=[],u=new Set(["and","or","not","true","false"]);for(const l of s)l.startsWith('"')||l.startsWith("'")||/^[0-9]/.test(l)||/^[()!<>=]+$/.test(l)||u.has(l.toLowerCase())?h.push(l):h.push(`${e}.${l}`);return h.join(" ")}
+      <!-- Exhibit 3: Time Machine -->
+      <section class="exhibit" id="exhibit-3">
+        <div class="exhibit-header">
+          <h2 class="exhibit-title">Time Machine</h2>
+          <p class="exhibit-description">Undo/redo with visible state animation. Click any point on the timeline to travel back in time.</p>
+        </div>
+        <div class="exhibit-content">
+          <div class="exhibit-interactive" id="time-machine">
+            <!-- Timeline -->
+            <div class="timeline-section">
+              <h3 class="section-title">History Timeline</h3>
+              <div class="timeline-container" id="timeline-container">
+                <div class="timeline-track" id="timeline-track">
+                  <!-- Timeline dots rendered here -->
+                </div>
+              </div>
+              <div class="timeline-controls">
+                <button class="btn btn-secondary" id="undo-btn" disabled>◀◀ Undo</button>
+                <button class="btn btn-secondary" id="redo-btn" disabled>Redo ▶▶</button>
+                <button class="btn btn-danger btn-small" id="clear-history-btn">🗑️ Clear History</button>
+              </div>
+            </div>
 
-// Expose to window for demo code
-window.createFlagStore = it;
-window.ValidationError = N;
-window.ParseError = g;
-window.FlagsError = j;
+            <!-- Batch Demo -->
+            <div class="batch-section">
+              <h3 class="section-title">Batch Operations Demo</h3>
+              <p class="batch-description">See how batching affects undo history:</p>
+              <div class="batch-buttons">
+                <div class="batch-option">
+                  <button class="btn btn-secondary" id="make-3-changes">Make 3 Changes</button>
+                  <div class="batch-hint">Creates 3 dots - 3 undos to revert</div>
+                </div>
+                <div class="batch-option">
+                  <button class="btn btn-primary" id="make-batch-3">Make Batch of 3</button>
+                  <div class="batch-hint">Creates 1 dot - 1 undo to revert all</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Persistence -->
+            <div class="persistence-section">
+              <h3 class="section-title">Persistence</h3>
+              <div class="persistence-buttons">
+                <button class="btn btn-secondary" id="save-btn">💾 Save to Storage</button>
+                <button class="btn btn-secondary" id="load-btn">📂 Load from Storage</button>
+              </div>
+              <div class="persistence-status" id="persistence-status">Ready</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add Condition Modal -->
+  <div class="modal-overlay hidden" id="condition-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Add a Condition</h3>
+        <button class="modal-close" id="close-modal">&times;</button>
+      </div>
+      <div class="modal-content">
+        <div class="template-section">
+          <h4>Quick Templates (click to add):</h4>
+          <div class="templates-list">
+            <button class="template-btn" data-condition="inventory.has_potion AND player.health < 50" data-name="Can use healing potion">
+              <strong>"Can use healing potion"</strong>
+              <code>has_potion AND health &lt; 50</code>
+            </button>
+            <button class="template-btn" data-condition="player.level >= 10 AND inventory.has_sword AND inventory.has_shield" data-name="Boss fight ready">
+              <strong>"Boss fight ready"</strong>
+              <code>level &gt;= 10 AND has_sword AND has_shield</code>
+            </button>
+            <button class="template-btn" data-condition="player.gold >= 100 AND (NOT inventory.has_potion OR NOT inventory.has_shield)" data-name="Needs shopping">
+              <strong>"Needs shopping"</strong>
+              <code>gold &gt;= 100 AND (NOT has_potion OR NOT has_shield)</code>
+            </button>
+            <button class="template-btn" data-condition="player.health < 25 OR status.poisoned" data-name="In danger">
+              <strong>"In danger"</strong>
+              <code>health &lt; 25 OR poisoned</code>
+            </button>
+          </div>
+        </div>
+        <div class="custom-section">
+          <h4>Or build your own:</h4>
+          <input type="text" class="input input-mono" id="custom-condition-name" placeholder="Condition name...">
+          <input type="text" class="input input-mono" id="custom-condition" placeholder="e.g., player.gold >= 100 AND inventory.has_key">
+          <button class="btn btn-primary" id="add-custom-condition">Add Condition</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Library (from dist) -->
+  <script type="module">
+    import * as Library from './dist/index.js'
+    window.Library = Library
   </script>
 
-  <!-- ============================================ -->
-  <!-- DEMO AND TEST CODE -->
-  <!-- ============================================ -->
-  <script>
-    // Global store for basic demos
-    let demoStore = window.createFlagStore();
-    let historyStore = null;
-    let persistStore = null;
-    let namespaceStore = null;
-    let subscriptions = [];
-
-    // ===========================================
-    // AUTOMATED TEST SUITE
-    // ===========================================
-    const tests = [
-      // Basic Creation & Operations
-      {
-        name: 'creates store with default options',
-        fn: async () => {
-          const store = window.createFlagStore();
-          if (!store) throw new Error('Store is undefined');
-          if (typeof store.set !== 'function') throw new Error('Missing set method');
-        }
-      },
-      {
-        name: 'creates store with initial values',
-        fn: async () => {
-          const store = window.createFlagStore({ initial: { test: true, count: 42 } });
-          if (store.get('test') !== true) throw new Error('Initial boolean not set');
-          if (store.get('count') !== 42) throw new Error('Initial number not set');
-        }
-      },
-      {
-        name: 'set() and get() work correctly',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('myKey', 'myValue');
-          const result = store.get('myKey');
-          if (result !== 'myValue') throw new Error(`Expected 'myValue', got '${result}'`);
-        }
-      },
-      {
-        name: 'has() returns true for existing keys',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('exists', 123);
-          if (!store.has('exists')) throw new Error('has() returned false for existing key');
-        }
-      },
-      {
-        name: 'has() returns false for non-existing keys',
-        fn: async () => {
-          const store = window.createFlagStore();
-          if (store.has('nonexistent')) throw new Error('has() returned true for non-existing key');
-        }
-      },
-      {
-        name: 'delete() removes flags',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('temp', 'value');
-          store.delete('temp');
-          if (store.has('temp')) throw new Error('Flag still exists after delete');
-        }
-      },
-      {
-        name: 'clear() removes all flags',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('a', 1).set('b', 2).set('c', 3);
-          store.clear();
-          if (store.keys().length !== 0) throw new Error('Store not empty after clear');
-        }
-      },
-      {
-        name: 'keys are trimmed automatically',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('  trimmed  ', 'value');
-          if (!store.has('trimmed')) throw new Error('Trimmed key not found');
-          if (store.get('  trimmed  ') !== 'value') throw new Error('Trimmed key lookup failed');
-        }
-      },
-
-      // Convenience Methods
-      {
-        name: 'toggle() creates true for non-existent flag',
-        fn: async () => {
-          const store = window.createFlagStore();
-          const result = store.toggle('newFlag');
-          if (result !== true) throw new Error('toggle() did not return true');
-          if (store.get('newFlag') !== true) throw new Error('Flag not set to true');
-        }
-      },
-      {
-        name: 'toggle() flips boolean values',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('flag', true);
-          store.toggle('flag');
-          if (store.get('flag') !== false) throw new Error('toggle() did not flip to false');
-          store.toggle('flag');
-          if (store.get('flag') !== true) throw new Error('toggle() did not flip to true');
-        }
-      },
-      {
-        name: 'increment() initializes to amount if missing',
-        fn: async () => {
-          const store = window.createFlagStore();
-          const result = store.increment('counter', 5);
-          if (result !== 5) throw new Error('increment() did not initialize to 5');
-        }
-      },
-      {
-        name: 'increment() adds to existing number',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('counter', 10);
-          const result = store.increment('counter', 3);
-          if (result !== 13) throw new Error(`Expected 13, got ${result}`);
-        }
-      },
-      {
-        name: 'decrement() subtracts from existing number',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('lives', 5);
-          const result = store.decrement('lives', 2);
-          if (result !== 3) throw new Error(`Expected 3, got ${result}`);
-        }
-      },
-
-      // Bulk Operations
-      {
-        name: 'all() returns all flags as object',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('a', 1).set('b', 2);
-          const all = store.all();
-          if (all.a !== 1 || all.b !== 2) throw new Error('all() did not return correct values');
-        }
-      },
-      {
-        name: 'keys() returns array of keys',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('x', 1).set('y', 2);
-          const keys = store.keys();
-          if (!keys.includes('x') || !keys.includes('y')) throw new Error('keys() missing values');
-        }
-      },
-      {
-        name: 'setMany() sets multiple flags',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.setMany({ a: 1, b: 2, c: 3 });
-          if (store.get('a') !== 1 || store.get('b') !== 2 || store.get('c') !== 3) {
-            throw new Error('setMany() did not set all values');
-          }
-        }
-      },
-
-      // Condition Evaluation
-      {
-        name: 'check() evaluates simple truthy condition',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('flag', true);
-          if (!store.check('flag')) throw new Error('Truthy check failed');
-        }
-      },
-      {
-        name: 'check() evaluates AND conditions',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('a', true).set('b', true);
-          if (!store.check('a AND b')) throw new Error('AND condition failed');
-          store.set('b', false);
-          if (store.check('a AND b')) throw new Error('AND should be false');
-        }
-      },
-      {
-        name: 'check() evaluates OR conditions',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('a', true).set('b', false);
-          if (!store.check('a OR b')) throw new Error('OR condition failed');
-        }
-      },
-      {
-        name: 'check() evaluates NOT conditions',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('flag', false);
-          if (!store.check('NOT flag')) throw new Error('NOT condition failed');
-        }
-      },
-      {
-        name: 'check() evaluates numeric comparisons',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('score', 100);
-          if (!store.check('score > 50')) throw new Error('Greater than failed');
-          if (!store.check('score >= 100')) throw new Error('Greater or equal failed');
-          if (!store.check('score < 200')) throw new Error('Less than failed');
-          if (!store.check('score == 100')) throw new Error('Equality failed');
-        }
-      },
-      {
-        name: 'check() evaluates parentheses',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('a', true).set('b', false).set('c', true);
-          if (!store.check('a AND (b OR c)')) throw new Error('Parentheses evaluation failed');
-        }
-      },
-
-      // Subscriptions
-      {
-        name: 'subscribe() receives change notifications',
-        fn: async () => {
-          const store = window.createFlagStore();
-          let notified = false;
-          store.subscribe((key, newVal, oldVal) => {
-            notified = true;
-          });
-          store.set('test', 'value');
-          if (!notified) throw new Error('Subscriber not notified');
-        }
-      },
-      {
-        name: 'unsubscribe() stops notifications',
-        fn: async () => {
-          const store = window.createFlagStore();
-          let count = 0;
-          const unsub = store.subscribe(() => count++);
-          store.set('a', 1);
-          unsub();
-          store.set('b', 2);
-          if (count !== 1) throw new Error(`Expected 1 notification, got ${count}`);
-        }
-      },
-      {
-        name: 'subscribeKey() receives key-specific changes',
-        fn: async () => {
-          const store = window.createFlagStore();
-          let called = false;
-          store.subscribeKey('watched', (newVal, oldVal) => {
-            called = true;
-          });
-          store.set('other', 'value');
-          if (called) throw new Error('subscribeKey fired for wrong key');
-          store.set('watched', 'value');
-          if (!called) throw new Error('subscribeKey not fired');
-        }
-      },
-
-      // History
-      {
-        name: 'undo() reverts changes',
-        fn: async () => {
-          const store = window.createFlagStore({ history: true });
-          store.set('count', 1);
-          store.set('count', 2);
-          store.undo();
-          if (store.get('count') !== 1) throw new Error('Undo failed');
-        }
-      },
-      {
-        name: 'redo() reapplies changes',
-        fn: async () => {
-          const store = window.createFlagStore({ history: true });
-          store.set('count', 1);
-          store.set('count', 2);
-          store.undo();
-          store.redo();
-          if (store.get('count') !== 2) throw new Error('Redo failed');
-        }
-      },
-      {
-        name: 'canUndo() and canRedo() work correctly',
-        fn: async () => {
-          const store = window.createFlagStore({ history: true });
-          if (store.canUndo()) throw new Error('canUndo true on fresh store');
-          store.set('x', 1);
-          if (!store.canUndo()) throw new Error('canUndo false after change');
-          store.undo();
-          if (!store.canRedo()) throw new Error('canRedo false after undo');
-        }
-      },
-
-      // Namespacing
-      {
-        name: 'namespace() creates scoped store',
-        fn: async () => {
-          const store = window.createFlagStore();
-          const player = store.namespace('player');
-          player.set('name', 'Alice');
-          if (store.get('player.name') !== 'Alice') throw new Error('Namespaced key not set');
-        }
-      },
-      {
-        name: 'namespace keys() returns scoped keys',
-        fn: async () => {
-          const store = window.createFlagStore();
-          const ns = store.namespace('config');
-          ns.set('volume', 80).set('quality', 'high');
-          const keys = ns.keys();
-          if (!keys.includes('volume') || !keys.includes('quality')) {
-            throw new Error('Namespace keys() incorrect');
-          }
-        }
-      },
-
-      // Batch Operations
-      {
-        name: 'batch() defers notifications',
-        fn: async () => {
-          const store = window.createFlagStore();
-          let notifyCount = 0;
-          store.subscribe(() => notifyCount++);
-          store.batch(() => {
-            store.set('a', 1);
-            store.set('b', 2);
-            store.set('c', 3);
-          });
-          if (notifyCount !== 1) throw new Error(`Expected 1 notification, got ${notifyCount}`);
-        }
-      },
-      {
-        name: 'batch() rolls back on error',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('initial', 'value');
-          try {
-            store.batch(() => {
-              store.set('temp', 'data');
-              throw new Error('Test error');
-            });
-          } catch (e) {
-            // Expected
-          }
-          if (store.has('temp')) throw new Error('Batch not rolled back');
-          if (store.get('initial') !== 'value') throw new Error('Initial state corrupted');
-        }
-      },
-
-      // Computed Flags
-      {
-        name: 'compute() creates derived flags',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('a', 2);
-          store.set('b', 3);
-          store.compute('sum', ['a', 'b'], (a, b) => (a || 0) + (b || 0));
-          if (store.get('sum') !== 5) throw new Error('Computed flag incorrect');
-        }
-      },
-      {
-        name: 'computed flags auto-update',
-        fn: async () => {
-          const store = window.createFlagStore();
-          store.set('x', 10);
-          store.compute('double', ['x'], (x) => (x || 0) * 2);
-          if (store.get('double') !== 20) throw new Error('Initial computed value wrong');
-          store.set('x', 15);
-          if (store.get('double') !== 30) throw new Error('Computed flag did not update');
-        }
-      },
-
-      // Error Handling
-      {
-        name: 'ValidationError thrown for invalid keys',
-        fn: async () => {
-          const store = window.createFlagStore();
-          let errorThrown = false;
-          try {
-            store.set('invalid key', 'value'); // Space in key
-          } catch (e) {
-            if (e instanceof window.ValidationError) errorThrown = true;
-          }
-          if (!errorThrown) throw new Error('ValidationError not thrown');
-        }
-      },
-      {
-        name: 'TypeError thrown for invalid value types',
-        fn: async () => {
-          const store = window.createFlagStore();
-          let errorThrown = false;
-          try {
-            store.set('key', { obj: 'not allowed' });
-          } catch (e) {
-            errorThrown = true;
-          }
-          if (!errorThrown) throw new Error('TypeError not thrown for object value');
-        }
-      },
-      {
-        name: 'ParseError thrown for invalid conditions',
-        fn: async () => {
-          const store = window.createFlagStore();
-          let errorThrown = false;
-          try {
-            store.check('(unclosed paren');
-          } catch (e) {
-            if (e instanceof window.ParseError) errorThrown = true;
-          }
-          if (!errorThrown) throw new Error('ParseError not thrown');
-        }
-      }
-    ];
-
-    // Test runner functions
-    function logResult(name, status, error) {
-      const output = document.getElementById('test-output');
-      const className = status === 'PASS' ? 'test-pass' : 'test-fail';
-      const errorMsg = error ? `\n    Error: ${error}` : '';
-      const icon = status === 'PASS' ? '✓' : '✗';
-      output.innerHTML += `<div class="${className}">${icon} ${name}${errorMsg}</div>`;
-      output.scrollTop = output.scrollHeight;
-    }
-
-    function logSummary(passed, failed) {
-      const summary = document.getElementById('summary');
-      const total = passed + failed;
-      const className = failed === 0 ? 'test-pass' : 'test-fail';
-      const badge = failed === 0 ? 'badge-success' : 'badge-error';
-      summary.innerHTML = `
-        <span class="${className}">
-          ${passed}/${total} tests passed
-          <span class="badge ${badge}">${failed === 0 ? 'ALL PASS' : failed + ' FAILED'}</span>
-        </span>
-      `;
-    }
-
-    async function runAllTests() {
-      clearResults();
-      document.getElementById('test-output').innerHTML = '<div>Running tests...</div>\n';
-      let passed = 0, failed = 0;
-
-      for (const test of tests) {
-        try {
-          await test.fn();
-          logResult(test.name, 'PASS');
-          passed++;
-        } catch (e) {
-          logResult(test.name, 'FAIL', e.message);
-          failed++;
-        }
-        // Small delay so UI updates
-        await new Promise(resolve => setTimeout(resolve, 10));
-      }
-
-      logSummary(passed, failed);
-    }
-
-    function clearResults() {
-      document.getElementById('test-output').innerHTML = '';
-      document.getElementById('summary').innerHTML = '';
-    }
-
-    // ===========================================
-    // INTERACTIVE DEMO FUNCTIONS
-    // ===========================================
-
-    // Basic Operations
-    function basicSet() {
-      const key = document.getElementById('basic-key').value;
-      const value = document.getElementById('basic-value').value;
-      try {
-        // Try to parse as number or boolean
-        let parsedValue = value;
-        if (value === 'true') parsedValue = true;
-        else if (value === 'false') parsedValue = false;
-        else if (!isNaN(value) && value !== '') parsedValue = Number(value);
-
-        demoStore.set(key, parsedValue);
-        document.getElementById('basic-output').innerHTML =
-          `✓ Set <code>${key}</code> = <code>${JSON.stringify(parsedValue)}</code> (${typeof parsedValue})`;
-      } catch (e) {
-        document.getElementById('basic-output').innerHTML =
-          `<span class="test-fail">✗ Error: ${e.message}</span>`;
-      }
-    }
-
-    function basicGet() {
-      const key = document.getElementById('basic-key').value;
-      const value = demoStore.get(key);
-      document.getElementById('basic-output').innerHTML =
-        value === undefined
-          ? `Key <code>${key}</code> not found`
-          : `<code>${key}</code> = <code>${JSON.stringify(value)}</code> (${typeof value})`;
-    }
-
-    function basicHas() {
-      const key = document.getElementById('basic-key').value;
-      const exists = demoStore.has(key);
-      document.getElementById('basic-output').innerHTML =
-        `<code>has('${key}')</code> = <code>${exists}</code>`;
-    }
-
-    function basicDelete() {
-      const key = document.getElementById('basic-key').value;
-      demoStore.delete(key);
-      document.getElementById('basic-output').innerHTML =
-        `✓ Deleted <code>${key}</code>`;
-    }
-
-    function basicClear() {
-      const count = demoStore.keys().length;
-      demoStore.clear();
-      document.getElementById('basic-output').innerHTML =
-        `✓ Cleared all flags (${count} removed)`;
-    }
-
-    // Convenience Methods
-    function toggleDemo() {
-      const result = demoStore.toggle('darkMode');
-      document.getElementById('convenience-output').innerHTML =
-        `✓ Toggled <code>darkMode</code> → <code>${result}</code>`;
-    }
-
-    function incrementDemo() {
-      const result = demoStore.increment('score', 10);
-      document.getElementById('convenience-output').innerHTML =
-        `✓ Incremented <code>score</code> by 10 → <code>${result}</code>`;
-    }
-
-    function decrementDemo() {
-      const result = demoStore.decrement('lives', 1);
-      document.getElementById('convenience-output').innerHTML =
-        `✓ Decremented <code>lives</code> by 1 → <code>${result}</code>`;
-    }
-
-    // Condition Evaluation
-    function setupConditionFlags() {
-      demoStore.set('darkMode', true);
-      demoStore.set('score', 150);
-      demoStore.set('isAdmin', false);
-      document.getElementById('condition-output').innerHTML =
-        `✓ Set test flags:\n  darkMode = true\n  score = 150\n  isAdmin = false`;
-    }
-
-    function checkCondition() {
-      const condition = document.getElementById('condition-input').value;
-      try {
-        const result = demoStore.check(condition);
-        document.getElementById('condition-output').innerHTML =
-          `Condition: <code>${condition}</code>\nResult: <code class="${result ? 'test-pass' : 'test-fail'}">${result}</code>`;
-      } catch (e) {
-        document.getElementById('condition-output').innerHTML =
-          `<span class="test-fail">✗ Parse Error: ${e.message}</span>`;
-      }
-    }
-
-    // Subscriptions
-    function subscribeDemo() {
-      const unsub = demoStore.subscribe((key, newVal, oldVal) => {
-        const output = document.getElementById('subscription-output');
-        output.innerHTML += `\n📡 Change: ${key} = ${JSON.stringify(newVal)} (was ${JSON.stringify(oldVal)})`;
-      });
-      subscriptions.push(unsub);
-      document.getElementById('subscription-output').innerHTML =
-        '✓ Subscribed to all changes. Try setting values!';
-    }
-
-    function subscribeKeyDemo() {
-      const unsub = demoStore.subscribeKey('playerName', (newVal, oldVal) => {
-        const output = document.getElementById('subscription-output');
-        output.innerHTML += `\n📡 playerName changed: ${JSON.stringify(oldVal)} → ${JSON.stringify(newVal)}`;
-      });
-      subscriptions.push(unsub);
-      document.getElementById('subscription-output').innerHTML +=
-        '\n✓ Subscribed to "playerName" changes specifically';
-    }
-
-    function triggerChange() {
-      demoStore.set('playerName', 'Hero_' + Math.floor(Math.random() * 1000));
-      demoStore.set('timestamp', Date.now());
-    }
-
-    function unsubscribeDemo() {
-      subscriptions.forEach(unsub => unsub());
-      subscriptions = [];
-      document.getElementById('subscription-output').innerHTML =
-        '✓ All subscriptions removed';
-    }
-
-    // History
-    function historySetup() {
-      historyStore = window.createFlagStore({ history: { maxHistory: 50 } });
-      document.getElementById('history-output').innerHTML =
-        '✓ Created store with history tracking enabled';
-    }
-
-    function makeChanges() {
-      if (!historyStore) return historySetup();
-      historyStore.set('level', 1);
-      historyStore.set('level', 2);
-      historyStore.set('level', 3);
-      document.getElementById('history-output').innerHTML =
-        `✓ Made 3 changes: level 1 → 2 → 3\nCurrent: level = ${historyStore.get('level')}\nCan undo: ${historyStore.canUndo()}`;
-    }
-
-    function undoDemo() {
-      if (!historyStore) return historySetup();
-      const success = historyStore.undo();
-      document.getElementById('history-output').innerHTML =
-        success
-          ? `✓ Undo successful\nCurrent level = ${historyStore.get('level')}\nCan undo: ${historyStore.canUndo()}, Can redo: ${historyStore.canRedo()}`
-          : '✗ Nothing to undo';
-    }
-
-    function redoDemo() {
-      if (!historyStore) return historySetup();
-      const success = historyStore.redo();
-      document.getElementById('history-output').innerHTML =
-        success
-          ? `✓ Redo successful\nCurrent level = ${historyStore.get('level')}\nCan redo: ${historyStore.canRedo()}`
-          : '✗ Nothing to redo';
-    }
-
-    function clearHistoryDemo() {
-      if (!historyStore) return historySetup();
-      historyStore.clearHistory();
-      document.getElementById('history-output').innerHTML =
-        `✓ History cleared\nCan undo: ${historyStore.canUndo()}, Can redo: ${historyStore.canRedo()}`;
-    }
-
-    // Persistence
-    function persistSetup() {
-      persistStore = window.createFlagStore({
-        persist: {
-          storage: localStorage,
-          key: 'flags-demo',
-          autoSave: true
-        }
-      });
-      persistStore.set('persistedFlag', 'This will survive page reload!');
-      document.getElementById('persist-output').innerHTML =
-        '✓ Created store with localStorage persistence\n✓ Set persistedFlag (will auto-save)';
-    }
-
-    function persistSave() {
-      if (!persistStore) return persistSetup();
-      persistStore.save();
-      document.getElementById('persist-output').innerHTML =
-        '✓ Manually saved to localStorage\nCheck localStorage in DevTools!';
-    }
-
-    function persistLoad() {
-      if (!persistStore) return persistSetup();
-      persistStore.load();
-      const all = persistStore.all();
-      document.getElementById('persist-output').innerHTML =
-        '✓ Loaded from localStorage:\n' + JSON.stringify(all, null, 2);
-    }
-
-    function persistClear() {
-      localStorage.removeItem('flags-demo');
-      document.getElementById('persist-output').innerHTML =
-        '✓ Cleared localStorage. Reload page to see persistence in action!';
-    }
-
-    // Namespacing
-    function namespaceDemo() {
-      namespaceStore = demoStore.namespace('player');
-      document.getElementById('namespace-output').innerHTML =
-        '✓ Created "player" namespace\nOperations will be prefixed with "player."';
-    }
-
-    function namespaceSet() {
-      if (!namespaceStore) namespaceStore = demoStore.namespace('player');
-      namespaceStore.set('level', 5);
-      namespaceStore.set('health', 100);
-      document.getElementById('namespace-output').innerHTML =
-        '✓ Set player.level = 5 and player.health = 100\n' +
-        `Check main store: ${demoStore.get('player.level')}`;
-    }
-
-    function namespaceGet() {
-      if (!namespaceStore) namespaceStore = demoStore.namespace('player');
-      const level = namespaceStore.get('level');
-      document.getElementById('namespace-output').innerHTML =
-        `namespaceStore.get('level') = ${level}\n` +
-        `(same as demoStore.get('player.level'))`;
-    }
-
-    function namespaceKeys() {
-      if (!namespaceStore) namespaceStore = demoStore.namespace('player');
-      const keys = namespaceStore.keys();
-      document.getElementById('namespace-output').innerHTML =
-        `Namespace keys: [${keys.join(', ')}]\n` +
-        `All player.* flags in the namespace`;
-    }
-
-    // Batch Operations
-    function batchDemo() {
-      let notifyCount = 0;
-      const unsub = demoStore.subscribe(() => notifyCount++);
-
-      demoStore.batch(() => {
-        demoStore.set('a', 1);
-        demoStore.set('b', 2);
-        demoStore.set('c', 3);
-        demoStore.set('d', 4);
-        demoStore.set('e', 5);
-      });
-
-      unsub();
-      document.getElementById('batch-output').innerHTML =
-        `✓ Set 5 flags in batch\nNotifications fired: ${notifyCount} (should be 1)\n` +
-        `All changes sent as single atomic update`;
-    }
-
-    function batchRollback() {
-      demoStore.set('before', 'initial');
-      try {
-        demoStore.batch(() => {
-          demoStore.set('temp1', 'value1');
-          demoStore.set('temp2', 'value2');
-          throw new Error('Simulated error!');
-        });
-      } catch (e) {
-        document.getElementById('batch-output').innerHTML =
-          `✓ Batch encountered error and rolled back\n` +
-          `before = ${demoStore.get('before')} (preserved)\n` +
-          `temp1 exists? ${demoStore.has('temp1')} (should be false)\n` +
-          `All changes reverted successfully!`;
-      }
-    }
-
-    // Computed Flags
-    function computedSetup() {
-      demoStore.set('firstName', 'John');
-      demoStore.set('lastName', 'Doe');
-      demoStore.compute('fullName', ['firstName', 'lastName'], (first, last) => {
-        return `${first || ''} ${last || ''}`.trim();
-      });
-      document.getElementById('computed-output').innerHTML =
-        `✓ Created computed flag 'fullName'\nDependencies: firstName, lastName\n` +
-        `Current value: "${demoStore.get('fullName')}"`;
-    }
-
-    function computedUpdate() {
-      demoStore.set('firstName', 'Jane');
-      demoStore.set('lastName', 'Smith');
-      document.getElementById('computed-output').innerHTML =
-        `✓ Updated dependencies\nfirstName = "Jane"\nlastName = "Smith"\n` +
-        `fullName auto-updated to: "${demoStore.get('fullName')}"`;
-    }
-
-    function computedGet() {
-      const value = demoStore.get('fullName');
-      document.getElementById('computed-output').innerHTML =
-        `fullName = "${value}"\n(Computed from firstName + lastName)`;
-    }
-  </script>
+  <!-- Demo scripts (order matters) -->
+  <script src="demo-files/test-runner.js"></script>
+  <script src="demo-files/demo.js"></script>
+  <script src="demo-files/tests.js"></script>
 </body>
 </html>
