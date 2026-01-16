@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Working with Numeric Flags - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Working with Numeric Flags</h1>
+<p>Use the store for counters, scores, health bars, currency, and other numeric values with specialized methods for incrementing and decrementing.</p>
+<h2>Prerequisites</h2>
+<p>Before starting, you should:</p>
+<ul>
+<li><a href="concept-flag-store.html">Understand how the Flag Store works</a></li>
+</ul>
+<h2>Overview</h2>
+<p>We&#39;ll work with numeric flags by:</p>
+<ol>
+<li>Setting numeric initial values</li>
+<li>Using <code>increment()</code> and <code>decrement()</code></li>
+<li>Comparing numbers in conditions</li>
+<li>Handling missing counters</li>
+</ol>
+<h2>Step 1: Set Numeric Values</h2>
+<p>Numbers work just like any other value type:</p>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: {
+    health: 100,
+    gold: 0,
+    experience: 0,
+    level: 1
+  }
+})
+
+// Set directly
+store.set(&#39;health&#39;, 75)
+store.set(&#39;gold&#39;, 1000)
+</code></pre>
+<h2>Step 2: Increment and Decrement</h2>
+<p>Use specialized methods for counter operations:</p>
+<pre><code class="language-typescript">// Add to a value
+store.increment(&#39;gold&#39;, 50)       // gold: 0 -&gt; 50
+store.increment(&#39;experience&#39;, 100) // experience: 0 -&gt; 100
+
+// Subtract from a value
+store.decrement(&#39;health&#39;, 25)     // health: 100 -&gt; 75
+
+// Default amount is 1
+store.increment(&#39;level&#39;)          // level: 1 -&gt; 2
+store.decrement(&#39;health&#39;)         // health: 75 -&gt; 74
+</code></pre>
+<p>Both methods return the new value:</p>
+<pre><code class="language-typescript">const newHealth = store.decrement(&#39;health&#39;, 10)
+console.log(newHealth)  // 64
+</code></pre>
+<h2>Step 3: Compare in Conditions</h2>
+<p>Use comparison operators in <code>check()</code>:</p>
+<pre><code class="language-typescript">// Basic comparisons
+store.check(&#39;health &gt; 0&#39;)         // Player is alive
+store.check(&#39;gold &gt;= 100&#39;)        // Can afford item
+store.check(&#39;level == 5&#39;)         // Exactly level 5
+store.check(&#39;experience &lt; 1000&#39;)  // Not yet at threshold
+
+// Combine with logic
+store.check(&#39;health &gt; 0 AND gold &gt;= 100&#39;)
+store.check(&#39;level &gt;= 10 OR experience &gt;= 5000&#39;)
+</code></pre>
+<h2>Step 4: Handle Missing Counters</h2>
+<p>Missing flags auto-initialize when incremented or decremented:</p>
+<pre><code class="language-typescript">const store = createFlagStore()  // Empty store
+
+// Incrementing a missing key initializes to the amount
+store.increment(&#39;new_counter&#39;, 5)
+store.get(&#39;new_counter&#39;)  // 5
+
+// Decrementing a missing key initializes to negative
+store.decrement(&#39;another&#39;, 3)
+store.get(&#39;another&#39;)  // -3
+
+// Default increment/decrement of 1
+store.increment(&#39;clicks&#39;)
+store.get(&#39;clicks&#39;)  // 1
+</code></pre>
+<p>In conditions, missing keys are treated as 0:</p>
+<pre><code class="language-typescript">store.check(&#39;missing_score &gt;= 0&#39;)  // true (0 &gt;= 0)
+store.check(&#39;missing_score &gt; 0&#39;)   // false (0 &gt; 0)
+</code></pre>
+<h2>Complete Example</h2>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: {
+    player_health: 100,
+    player_gold: 50,
+    enemy_health: 30,
+    potions: 3
+  }
+})
+
+// Combat round
+function playerAttack(damage: number) {
+  store.decrement(&#39;enemy_health&#39;, damage)
+
+  if (store.check(&#39;enemy_health &lt;= 0&#39;)) {
+    const goldReward = 25
+    store.increment(&#39;player_gold&#39;, goldReward)
+    console.log(`Enemy defeated! +${goldReward} gold`)
+  }
+}
+
+function enemyAttack(damage: number) {
+  store.decrement(&#39;player_health&#39;, damage)
+
+  if (store.check(&#39;player_health &lt;= 0&#39;)) {
+    console.log(&#39;Game Over!&#39;)
+  }
+}
+
+function usePotion() {
+  if (store.check(&#39;potions &gt; 0 AND player_health &lt; 100&#39;)) {
+    store.decrement(&#39;potions&#39;)
+    store.increment(&#39;player_health&#39;, 30)
+
+    // Cap at 100
+    if (store.get(&#39;player_health&#39;)! &gt; 100) {
+      store.set(&#39;player_health&#39;, 100)
+    }
+  }
+}
+
+// Play
+playerAttack(15)  // enemy_health: 30 -&gt; 15
+playerAttack(20)  // enemy_health: 15 -&gt; -5, &quot;Enemy defeated! +25 gold&quot;
+</code></pre>
+<h2>Variations</h2>
+<h3>Float Values</h3>
+<p>Floats work fine:</p>
+<pre><code class="language-typescript">store.set(&#39;temperature&#39;, 98.6)
+store.increment(&#39;temperature&#39;, 0.5)  // 99.1
+store.check(&#39;temperature &gt;= 100&#39;)    // false
+</code></pre>
+<h3>Negative Numbers</h3>
+<p>No restrictions on negatives:</p>
+<pre><code class="language-typescript">store.set(&#39;altitude&#39;, -100)
+store.increment(&#39;altitude&#39;, 50)      // -50
+store.check(&#39;altitude &lt; 0&#39;)          // true
+</code></pre>
+<h3>Range Checks</h3>
+<p>Combine comparisons for ranges:</p>
+<pre><code class="language-typescript">// Health between 25 and 75 (critical but not dead)
+store.check(&#39;health &gt; 25 AND health &lt;= 75&#39;)
+
+// Gold exactly in a range
+store.check(&#39;gold &gt;= 100 AND gold &lt; 500&#39;)
+</code></pre>
+<h3>Type Safety</h3>
+<p>Increment/decrement only work on numbers:</p>
+<pre><code class="language-typescript">store.set(&#39;name&#39;, &#39;Ada&#39;)
+store.increment(&#39;name&#39;)  // TypeError: Cannot increment non-numeric flag
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>TypeError on Increment</h3>
+<p><strong>Symptom:</strong> <code>TypeError: Cannot increment non-numeric flag</code></p>
+<p><strong>Cause:</strong> The flag exists but isn&#39;t a number.</p>
+<p><strong>Solution:</strong> Check the flag type before incrementing, or ensure it&#39;s initialized as a number.</p>
+<h3>Unexpected Zero</h3>
+<p><strong>Symptom:</strong> Value is 0 when you expected something else.</p>
+<p><strong>Cause:</strong> Missing flags are treated as 0 in conditions (but return <code>undefined</code> from <code>get()</code>).</p>
+<p><strong>Solution:</strong> Check <code>has()</code> to distinguish between 0 and missing, or use <code>get() ?? defaultValue</code>.</p>
+<h3>Float Precision</h3>
+<p><strong>Symptom:</strong> <code>0.1 + 0.2</code> gives <code>0.30000000000000004</code>.</p>
+<p><strong>Cause:</strong> JavaScript float precision.</p>
+<p><strong>Solution:</strong> Round when displaying, or use integers (cents instead of dollars).</p>
+<h2>See Also</h2>
+<ul>
+<li><strong><a href="concept-flag-store.html">Flag Store</a></strong> - How values are stored</li>
+<li><strong><a href="concept-condition-expressions.html">Condition Expressions</a></strong> - Comparison operators</li>
+<li><strong><a href="api-reading-and-writing.html">API: Reading and Writing</a></strong> - <code>increment()</code> and <code>decrement()</code> reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

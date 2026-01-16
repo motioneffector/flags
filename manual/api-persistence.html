@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Persistence API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Persistence API</h1>
+<p>Manual save and load operations for stores created with persistence enabled.</p>
+<p>These methods are only available when the store is created with a <code>persist</code> option.</p>
+<hr>
+<h2><code>save()</code></h2>
+<p>Manually saves all flags to persistent storage.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">save(): void
+</code></pre>
+<p><strong>Returns:</strong> <code>void</code></p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: { storage: localStorage, autoSave: false }
+})
+
+store.set(&#39;gold&#39;, 100)
+store.set(&#39;level&#39;, 5)
+
+// Changes not yet saved (autoSave is false)
+
+store.save()  // Now saved to localStorage
+</code></pre>
+<p>Note: If storage is unavailable or throws an error, the error is logged to <code>console.error</code> but not thrown.</p>
+<hr>
+<h2><code>load()</code></h2>
+<p>Manually loads all flags from persistent storage.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">load(): void
+</code></pre>
+<p><strong>Returns:</strong> <code>void</code></p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: { storage: localStorage, autoSave: false }
+})
+
+// Assume localStorage has previously saved data
+store.load()  // Loads and overwrites current state
+
+console.log(store.get(&#39;gold&#39;))  // Value from storage
+</code></pre>
+<p>Note:</p>
+<ul>
+<li>This clears the current store state and loads persisted values</li>
+<li>Subscribers are notified of all loaded values</li>
+<li>If storage is unavailable or contains invalid data, errors are logged but not thrown</li>
+</ul>
+<hr>
+<h2>Behavior Details</h2>
+<h3>Auto-Save (Default)</h3>
+<p>By default, <code>autoSave</code> is <code>true</code> and changes are saved automatically:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: { storage: localStorage }
+})
+
+store.set(&#39;gold&#39;, 100)  // Automatically saved
+store.increment(&#39;gold&#39;) // Automatically saved
+store.delete(&#39;gold&#39;)    // Automatically saved
+</code></pre>
+<h3>Manual Save Mode</h3>
+<p>Disable auto-save for manual control:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: { storage: localStorage, autoSave: false }
+})
+
+store.set(&#39;a&#39;, 1)    // NOT saved
+store.set(&#39;b&#39;, 2)    // NOT saved
+store.save()         // NOW saved
+</code></pre>
+<h3>Auto-Load on Creation</h3>
+<p>When persistence is enabled, the store automatically loads from storage on creation:</p>
+<pre><code class="language-typescript">// First session
+const store1 = createFlagStore({
+  persist: { storage: localStorage }
+})
+store1.set(&#39;gold&#39;, 500)
+
+// Later session (new page load)
+const store2 = createFlagStore({
+  persist: { storage: localStorage }
+})
+store2.get(&#39;gold&#39;)  // 500 (loaded automatically)
+</code></pre>
+<h3>Initial Values vs Persisted</h3>
+<p>Persisted data takes precedence over initial values:</p>
+<pre><code class="language-typescript">// Assume localStorage has { gold: 500 } from previous session
+
+const store = createFlagStore({
+  initial: { gold: 0 },  // Ignored if persisted data exists
+  persist: { storage: localStorage }
+})
+
+store.get(&#39;gold&#39;)  // 500 (from storage, not 0)
+</code></pre>
+<h3>Custom Storage Key</h3>
+<p>Avoid conflicts with multiple stores by using different keys:</p>
+<pre><code class="language-typescript">const gameStore = createFlagStore({
+  persist: { storage: localStorage, key: &#39;my-game-state&#39; }
+})
+
+const settingsStore = createFlagStore({
+  persist: { storage: localStorage, key: &#39;my-app-settings&#39; }
+})
+</code></pre>
+<p>Default key is <code>&#39;@motioneffector/flags&#39;</code>.</p>
+<h3>Type Preservation</h3>
+<p>Types are preserved through serialization:</p>
+<pre><code class="language-typescript">store.set(&#39;bool&#39;, true)
+store.set(&#39;num&#39;, 42)
+store.set(&#39;str&#39;, &#39;hello&#39;)
+store.save()
+
+// After reload
+store.load()
+typeof store.get(&#39;bool&#39;)  // &#39;boolean&#39;
+typeof store.get(&#39;num&#39;)   // &#39;number&#39;
+typeof store.get(&#39;str&#39;)   // &#39;string&#39;
+</code></pre>
+<h3>Error Handling</h3>
+<p>Storage errors are caught and logged, not thrown:</p>
+<pre><code class="language-typescript">const failingStorage = {
+  getItem: () =&gt; { throw new Error(&#39;Storage unavailable&#39;) },
+  setItem: () =&gt; { throw new Error(&#39;Storage unavailable&#39;) },
+  removeItem: () =&gt; { throw new Error(&#39;Storage unavailable&#39;) }
+}
+
+const store = createFlagStore({
+  persist: { storage: failingStorage }
+})
+
+// No error thrown, store still works in-memory
+store.set(&#39;x&#39;, 1)
+store.get(&#39;x&#39;)  // 1
+</code></pre>
+<h3>Corrupted Data</h3>
+<p>Invalid JSON in storage is handled gracefully:</p>
+<pre><code class="language-typescript">localStorage.setItem(&#39;@motioneffector/flags&#39;, &#39;invalid{json&#39;)
+
+const store = createFlagStore({
+  persist: { storage: localStorage }
+})
+
+// Error logged, store starts fresh
+store.get(&#39;anything&#39;)  // undefined
+</code></pre>
+<hr>
+<h2>Types</h2>
+<h3><code>FlagStoreWithPersistence</code></h3>
+<pre><code class="language-typescript">interface FlagStoreWithPersistence extends FlagStore {
+  save(): void
+  load(): void
+}
+</code></pre>
+<p>Cast the store to access persistence methods:</p>
+<pre><code class="language-typescript">import { createFlagStore, FlagStoreWithPersistence } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  persist: { storage: localStorage }
+}) as FlagStoreWithPersistence
+
+store.save()  // TypeScript knows this exists
+</code></pre>
+<h3><code>Storage</code></h3>
+<pre><code class="language-typescript">interface Storage {
+  getItem(key: string): string | null
+  setItem(key: string, value: string): void
+  removeItem(key: string): void
+}
+</code></pre>
+<p>Implement this interface for custom storage backends. <code>localStorage</code> and <code>sessionStorage</code> both satisfy this interface.</p>
+<h3><code>PersistOptions</code></h3>
+<pre><code class="language-typescript">interface PersistOptions {
+  storage: Storage
+  key?: string
+  autoSave?: boolean
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>storage</code></td>
+<td><code>Storage</code></td>
+<td>Yes</td>
+<td>Storage backend to use</td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>No</td>
+<td>Storage key. Default: <code>&#39;@motioneffector/flags&#39;</code></td>
+</tr>
+<tr>
+<td><code>autoSave</code></td>
+<td><code>boolean</code></td>
+<td>No</td>
+<td>Auto-save on changes. Default: <code>true</code></td>
+</tr>
+</tbody></table>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,14 +1,11 @@
 // Demo logic for @motioneffector/flags
 // This file contains all demo exhibit initialization and interaction logic
 
-// Verify library is loaded
-if (typeof window.Library === 'undefined') {
-  throw new Error(
-    'Library not loaded. Run `pnpm build` first, then serve this directory.'
-  )
-}
+// Import library and expose globally for tests
+import * as Library from '../dist/index.js'
+window.Library = Library
 
-const { createFlagStore } = window.Library
+const { createFlagStore } = Library
 
 // ============================================
 // SHARED STORE SETUP

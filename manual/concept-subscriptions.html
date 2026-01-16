@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscriptions - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Subscriptions</h1>
+<p>Subscriptions let you react when flag values change. Register a callback, and it fires whenever the store updates. This enables reactive UIs, logging, and side effects.</p>
+<h2>How It Works</h2>
+<p>When you call <code>subscribe()</code>, you register a callback function. Every time a flag changes (via <code>set()</code>, <code>toggle()</code>, <code>increment()</code>, etc.), your callback receives the key that changed plus the old and new values.</p>
+<pre><code>store.set(&#39;gold&#39;, 100)
+        ↓
+┌───────────────────────┐
+│      Flag Store       │
+│  gold: 50 → 100       │
+└───────────────────────┘
+        ↓
+   Notify subscribers
+        ↓
+callback(&#39;gold&#39;, 100, 50)
+</code></pre>
+<h2>Basic Usage</h2>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: { gold: 0, health: 100 }
+})
+
+// Subscribe to all changes
+const unsubscribe = store.subscribe((key, newValue, oldValue) =&gt; {
+  console.log(`${key}: ${oldValue} -&gt; ${newValue}`)
+})
+
+store.set(&#39;gold&#39;, 50)      // Logs: &quot;gold: 0 -&gt; 50&quot;
+store.increment(&#39;gold&#39;, 25) // Logs: &quot;gold: 50 -&gt; 75&quot;
+
+// Stop receiving notifications
+unsubscribe()
+
+store.set(&#39;gold&#39;, 100)     // No log (unsubscribed)
+</code></pre>
+<h2>Key Points</h2>
+<ul>
+<li><p><strong>Returns an unsubscribe function</strong> - Call it to stop receiving notifications. Safe to call multiple times.</p>
+</li>
+<li><p><strong>Callbacks receive (key, newValue, oldValue)</strong> - For new keys, <code>oldValue</code> is <code>undefined</code>. For deleted keys, <code>newValue</code> is <code>undefined</code>.</p>
+</li>
+<li><p><strong>Errors in callbacks are caught</strong> - If your callback throws, it&#39;s logged to <code>console.error</code> but doesn&#39;t break the store or other subscribers.</p>
+</li>
+<li><p><strong>Multiple subscribers are supported</strong> - All subscribers receive notifications in the order they were registered.</p>
+</li>
+</ul>
+<h2>Key-Specific Subscriptions</h2>
+<p>Use <code>subscribeKey()</code> to watch a single key:</p>
+<pre><code class="language-typescript">// Only fires when &#39;gold&#39; changes
+store.subscribeKey(&#39;gold&#39;, (newValue, oldValue) =&gt; {
+  console.log(`Gold: ${oldValue} -&gt; ${newValue}`)
+})
+
+store.set(&#39;gold&#39;, 100)    // Logs: &quot;Gold: 0 -&gt; 100&quot;
+store.set(&#39;health&#39;, 50)   // No log (different key)
+</code></pre>
+<p>Note that <code>subscribeKey()</code> callbacks receive only <code>(newValue, oldValue)</code>, not the key.</p>
+<h2>Examples</h2>
+<h3>UI Updates</h3>
+<pre><code class="language-typescript">// Update a health bar when health changes
+store.subscribeKey(&#39;health&#39;, (newValue) =&gt; {
+  const healthBar = document.querySelector(&#39;.health-bar&#39;)
+  healthBar.style.width = `${newValue}%`
+})
+</code></pre>
+<h3>Logging</h3>
+<pre><code class="language-typescript">// Log all state changes for debugging
+store.subscribe((key, newValue, oldValue) =&gt; {
+  console.log(`[State] ${key}: ${JSON.stringify(oldValue)} -&gt; ${JSON.stringify(newValue)}`)
+})
+</code></pre>
+<h3>Computed Side Effects</h3>
+<pre><code class="language-typescript">// Trigger game over when health reaches 0
+store.subscribeKey(&#39;health&#39;, (newValue) =&gt; {
+  if (newValue &lt;= 0) {
+    showGameOverScreen()
+  }
+})
+
+// Play sound when gold increases
+store.subscribeKey(&#39;gold&#39;, (newValue, oldValue) =&gt; {
+  if (newValue &gt; (oldValue ?? 0)) {
+    playSound(&#39;coin-collect&#39;)
+  }
+})
+</code></pre>
+<h3>Managing Multiple Subscriptions</h3>
+<pre><code class="language-typescript">const unsubscribers: Array&lt;() =&gt; void&gt; = []
+
+// Collect unsubscribe functions
+unsubscribers.push(
+  store.subscribeKey(&#39;gold&#39;, updateGoldUI),
+  store.subscribeKey(&#39;health&#39;, updateHealthUI),
+  store.subscribe(logAllChanges)
+)
+
+// Later, clean up all subscriptions
+function cleanup() {
+  unsubscribers.forEach(unsub =&gt; unsub())
+}
+</code></pre>
+<h2>Batch Operations</h2>
+<p>When you use <code>batch()</code>, subscribers are notified once at the end, not for each individual change:</p>
+<pre><code class="language-typescript">store.subscribe((key) =&gt; {
+  console.log(`Changed: ${key}`)
+})
+
+store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+  store.set(&#39;c&#39;, 3)
+})
+// Logs once: &quot;Changed: __batch__&quot;
+// Not three times
+</code></pre>
+<p>This prevents unnecessary re-renders when making multiple related changes.</p>
+<h2>Related</h2>
+<ul>
+<li><strong><a href="concept-flag-store.html">Flag Store</a></strong> - Where changes originate</li>
+<li><strong><a href="concept-computed-flags.html">Computed Flags</a></strong> - Derived values that also trigger subscriptions</li>
+<li><strong><a href="guide-batch-operations.html">Batch Operations</a></strong> - Group changes for single notification</li>
+<li><strong><a href="api-subscriptions.html">API: Subscriptions</a></strong> - Full method reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

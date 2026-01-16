@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Condition Expressions - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Condition Expressions</h1>
+<p>Condition expressions let you query the store using natural language. Instead of writing <code>store.get(&#39;gold&#39;) &gt;= 100 &amp;&amp; store.get(&#39;has_key&#39;) === true</code>, you write <code>store.check(&#39;gold &gt;= 100 AND has_key&#39;)</code>.</p>
+<h2>How It Works</h2>
+<p>The store parses your condition string, looks up each flag name, and evaluates the expression. The result is always a boolean.</p>
+<pre><code>Condition: &quot;gold &gt;= 100 AND has_key&quot;
+
+           ↓ Parse
+
+        [gold &gt;= 100]  AND  [has_key]
+              ↓                 ↓
+        lookup: 150        lookup: true
+              ↓                 ↓
+          150 &gt;= 100?      truthy?
+              ↓                 ↓
+            true              true
+              ↓                 ↓
+              └──── AND ────────┘
+                     ↓
+                   true
+</code></pre>
+<h2>Basic Usage</h2>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: { gold: 150, has_key: true, level: 5 }
+})
+
+// Simple truthiness
+store.check(&#39;has_key&#39;)              // true (has_key is true)
+store.check(&#39;gold&#39;)                 // true (150 is truthy)
+
+// Comparisons
+store.check(&#39;gold &gt;= 100&#39;)          // true
+store.check(&#39;level == 5&#39;)           // true
+store.check(&#39;level != 10&#39;)          // true
+
+// Logical operators
+store.check(&#39;gold &gt;= 100 AND has_key&#39;)           // true
+store.check(&#39;level &lt; 3 OR has_key&#39;)              // true
+store.check(&#39;NOT has_key&#39;)                       // false
+
+// Grouping with parentheses
+store.check(&#39;(gold &gt;= 100 OR level &gt;= 10) AND has_key&#39;)  // true
+</code></pre>
+<h2>Key Points</h2>
+<ul>
+<li><p><strong>Operators are case-insensitive</strong> - <code>AND</code>, <code>and</code>, <code>And</code> all work. Same for <code>OR</code> and <code>NOT</code>.</p>
+</li>
+<li><p><strong>Flag names are case-sensitive</strong> - <code>has_key</code> and <code>Has_Key</code> are different flags.</p>
+</li>
+<li><p><strong>Missing flags are falsy</strong> - If a flag doesn&#39;t exist, it&#39;s treated as <code>0</code> in comparisons and <code>false</code> in truthiness checks.</p>
+</li>
+<li><p><strong>String comparisons use quotes</strong> - Use <code>name == &quot;Alice&quot;</code> or <code>name == &#39;Alice&#39;</code> for string equality. Only <code>==</code> and <code>!=</code> work with strings (no ordering).</p>
+</li>
+<li><p><strong>Type mismatches return false</strong> - Comparing a string to a number (<code>name &gt; 5</code>) returns <code>false</code>, not an error.</p>
+</li>
+</ul>
+<h2>Operators</h2>
+<h3>Comparison Operators</h3>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Meaning</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>==</code></td>
+<td>Equal</td>
+<td><code>level == 5</code></td>
+</tr>
+<tr>
+<td><code>!=</code></td>
+<td>Not equal</td>
+<td><code>level != 0</code></td>
+</tr>
+<tr>
+<td><code>&gt;</code></td>
+<td>Greater than</td>
+<td><code>gold &gt; 100</code></td>
+</tr>
+<tr>
+<td><code>&lt;</code></td>
+<td>Less than</td>
+<td><code>health &lt; 50</code></td>
+</tr>
+<tr>
+<td><code>&gt;=</code></td>
+<td>Greater or equal</td>
+<td><code>score &gt;= 1000</code></td>
+</tr>
+<tr>
+<td><code>&lt;=</code></td>
+<td>Less or equal</td>
+<td><code>lives &lt;= 3</code></td>
+</tr>
+</tbody></table>
+<h3>Logical Operators</h3>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Meaning</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AND</code></td>
+<td>Both true</td>
+<td><code>gold &gt;= 100 AND has_key</code></td>
+</tr>
+<tr>
+<td><code>OR</code></td>
+<td>Either true</td>
+<td><code>is_admin OR is_moderator</code></td>
+</tr>
+<tr>
+<td><code>NOT</code> / <code>!</code></td>
+<td>Negation</td>
+<td><code>NOT is_banned</code> or <code>!is_banned</code></td>
+</tr>
+</tbody></table>
+<h3>Precedence</h3>
+<p><code>NOT</code> binds tightest, then <code>AND</code>, then <code>OR</code>. Use parentheses to override:</p>
+<pre><code class="language-typescript">// Without parentheses: AND binds before OR
+store.check(&#39;a OR b AND c&#39;)       // a OR (b AND c)
+
+// With parentheses: explicit grouping
+store.check(&#39;(a OR b) AND c&#39;)     // (a OR b) AND c
+</code></pre>
+<h2>Examples</h2>
+<h3>Game Conditions</h3>
+<pre><code class="language-typescript">// Can the player enter the dungeon?
+store.check(&#39;level &gt;= 5 AND has_key AND NOT is_cursed&#39;)
+
+// Can the player afford this item?
+store.check(&#39;gold &gt;= 100&#39;)
+
+// Is the player eligible for the quest?
+store.check(&#39;reputation &gt;= 50 AND (completed_tutorial OR is_veteran)&#39;)
+</code></pre>
+<h3>String Comparisons</h3>
+<pre><code class="language-typescript">store.set(&#39;player_class&#39;, &#39;warrior&#39;)
+store.set(&#39;difficulty&#39;, &#39;hard&#39;)
+
+// Check exact string match
+store.check(&#39;player_class == &quot;warrior&quot;&#39;)     // true
+store.check(&quot;difficulty == &#39;hard&#39;&quot;)          // true (single quotes work too)
+
+// Not equal
+store.check(&#39;player_class != &quot;mage&quot;&#39;)        // true
+</code></pre>
+<h3>Handling Missing Flags</h3>
+<pre><code class="language-typescript">const store = createFlagStore()  // Empty store
+
+// Missing flags are falsy
+store.check(&#39;nonexistent&#39;)           // false
+store.check(&#39;!nonexistent&#39;)          // true
+
+// In comparisons, missing flags are 0
+store.check(&#39;missing == 0&#39;)          // true
+store.check(&#39;missing &lt; 5&#39;)           // true (0 &lt; 5)
+store.check(&#39;missing &gt; 0&#39;)           // false (0 &gt; 0)
+</code></pre>
+<h2>Related</h2>
+<ul>
+<li><strong><a href="concept-flag-store.html">Flag Store</a></strong> - Where the values come from</li>
+<li><strong><a href="concept-namespaces.html">Namespaces</a></strong> - Scoped conditions with auto-prefixed flags</li>
+<li><strong><a href="api-conditions.html">API: Conditions</a></strong> - Full <code>check()</code> method reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

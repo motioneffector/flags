@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Computed Flags API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Computed Flags API</h1>
+<p>Create derived flag values that automatically update when dependencies change.</p>
+<hr>
+<h2><code>compute()</code></h2>
+<p>Creates a computed flag that recalculates when its dependencies change.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">compute(key: string, dependencies: string[], fn: ComputeFn): void
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The key for the computed flag</td>
+</tr>
+<tr>
+<td><code>dependencies</code></td>
+<td><code>string[]</code></td>
+<td>Yes</td>
+<td>Array of flag keys this value depends on</td>
+</tr>
+<tr>
+<td><code>fn</code></td>
+<td><code>ComputeFn</code></td>
+<td>Yes</td>
+<td>Function that computes the value from dependency values</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>void</code></p>
+<p><strong>Throws:</strong></p>
+<ul>
+<li><code>ValidationError</code> — If the key is invalid</li>
+<li><code>Error</code> — If the key is already used by a regular (non-computed) flag</li>
+<li><code>Error</code> — If a circular dependency is detected</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">store.set(&#39;base_damage&#39;, 10)
+store.set(&#39;strength&#39;, 5)
+
+store.compute(&#39;total_damage&#39;, [&#39;base_damage&#39;, &#39;strength&#39;], (baseDamage, strength) =&gt; {
+  return (baseDamage as number) + (strength as number) * 2
+})
+
+store.get(&#39;total_damage&#39;)  // 20
+
+// Automatically updates when dependencies change
+store.set(&#39;strength&#39;, 10)
+store.get(&#39;total_damage&#39;)  // 30
+</code></pre>
+<hr>
+<h2>Types</h2>
+<h3><code>ComputeFn</code></h3>
+<pre><code class="language-typescript">type ComputeFn = (...values: Array&lt;FlagValue | undefined&gt;) =&gt; FlagValue
+</code></pre>
+<p>Function that computes a derived value. Receives dependency values in order:</p>
+<pre><code class="language-typescript">// For compute(&#39;result&#39;, [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;], fn)
+// fn receives: (valueOfA, valueOfB, valueOfC)
+</code></pre>
+<p>Must return a valid <code>FlagValue</code> (boolean, number, or string).</p>
+<hr>
+<h2>Behavior Details</h2>
+<h3>Read-Only</h3>
+<p>Computed flags cannot be modified directly:</p>
+<pre><code class="language-typescript">store.compute(&#39;doubled&#39;, [&#39;x&#39;], (x) =&gt; (x as number) * 2)
+
+store.set(&#39;doubled&#39;, 100)      // throws Error
+store.delete(&#39;doubled&#39;)        // throws Error
+store.toggle(&#39;doubled&#39;)        // throws Error
+store.increment(&#39;doubled&#39;)     // throws Error
+</code></pre>
+<h3>Synchronous Only</h3>
+<p>Compute functions must be synchronous. Async functions return a Promise object, not the resolved value:</p>
+<pre><code class="language-typescript">// DON&#39;T do this
+store.compute(&#39;bad&#39;, [&#39;x&#39;], async (x) =&gt; {
+  return await someAsyncOperation(x)
+})
+store.get(&#39;bad&#39;)  // Returns a Promise, not the value
+</code></pre>
+<h3>Missing Dependencies</h3>
+<p>Dependencies that don&#39;t exist are passed as <code>undefined</code>:</p>
+<pre><code class="language-typescript">store.compute(&#39;safe&#39;, [&#39;missing&#39;], (value) =&gt; {
+  return value ?? &#39;default&#39;
+})
+store.get(&#39;safe&#39;)  // &#39;default&#39;
+</code></pre>
+<h3>Error Handling</h3>
+<p>If the compute function throws, the error is caught and the previous value is retained:</p>
+<pre><code class="language-typescript">store.compute(&#39;risky&#39;, [&#39;x&#39;], (x) =&gt; {
+  if (x === 0) throw new Error(&#39;Division by zero&#39;)
+  return 100 / (x as number)
+})
+
+store.set(&#39;x&#39;, 10)
+store.get(&#39;risky&#39;)  // 10
+
+store.set(&#39;x&#39;, 0)
+store.get(&#39;risky&#39;)  // Still 10 (error was caught)
+</code></pre>
+<h3>Circular Dependencies</h3>
+<p>Circular dependencies are detected at definition time:</p>
+<pre><code class="language-typescript">store.compute(&#39;a&#39;, [&#39;b&#39;], (b) =&gt; b)
+store.compute(&#39;b&#39;, [&#39;a&#39;], (a) =&gt; a)  // throws Error: circular dependency
+
+store.compute(&#39;self&#39;, [&#39;self&#39;], (s) =&gt; s)  // throws Error: circular dependency
+</code></pre>
+<h3>In Conditions</h3>
+<p>Computed flags work in <code>check()</code> like regular flags:</p>
+<pre><code class="language-typescript">store.set(&#39;level&#39;, 10)
+store.compute(&#39;can_access&#39;, [&#39;level&#39;], (level) =&gt; (level as number) &gt;= 5)
+
+store.check(&#39;can_access&#39;)  // true
+store.check(&#39;can_access AND level &gt; 8&#39;)  // true
+</code></pre>
+<h3>With Subscriptions</h3>
+<p>Changes to computed flags trigger subscriptions:</p>
+<pre><code class="language-typescript">store.set(&#39;x&#39;, 1)
+store.compute(&#39;doubled&#39;, [&#39;x&#39;], (x) =&gt; (x as number) * 2)
+
+store.subscribeKey(&#39;doubled&#39;, (newVal, oldVal) =&gt; {
+  console.log(`doubled: ${oldVal} -&gt; ${newVal}`)
+})
+
+store.set(&#39;x&#39;, 5)  // Logs: &quot;doubled: 2 -&gt; 10&quot;
+</code></pre>
+<h3>In <code>keys()</code> and <code>all()</code></h3>
+<p>Computed flags appear in key lists and snapshots:</p>
+<pre><code class="language-typescript">store.set(&#39;x&#39;, 10)
+store.compute(&#39;doubled&#39;, [&#39;x&#39;], (x) =&gt; (x as number) * 2)
+
+store.keys()  // [&#39;x&#39;, &#39;doubled&#39;]
+store.has(&#39;doubled&#39;)  // true
+store.all()   // { x: 10, doubled: 20 }
+</code></pre>
+<h3>Persistence</h3>
+<p>Computed flags are not persisted (they&#39;re recalculated on load):</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: { storage: localStorage }
+})
+
+store.set(&#39;x&#39;, 10)
+store.compute(&#39;doubled&#39;, [&#39;x&#39;], (x) =&gt; (x as number) * 2)
+
+// After reload, &#39;x&#39; is restored from storage
+// &#39;doubled&#39; must be recomputed (not stored)
+</code></pre>
+<h3>Clear Behavior</h3>
+<p><code>clear()</code> removes regular flags but not computed definitions:</p>
+<pre><code class="language-typescript">store.set(&#39;x&#39;, 10)
+store.compute(&#39;doubled&#39;, [&#39;x&#39;], (x) =&gt; (x as number) * 2)
+
+store.clear()
+
+store.has(&#39;x&#39;)        // false
+store.has(&#39;doubled&#39;)  // true (definition remains)
+store.get(&#39;doubled&#39;)  // 0 (computes with x=undefined, treated as 0)
+</code></pre>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

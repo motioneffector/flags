@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Namespaces API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Namespaces API</h1>
+<p>Create scoped views of the store with automatic key prefixing.</p>
+<hr>
+<h2><code>namespace()</code></h2>
+<p>Creates a scoped store view where all operations automatically prefix keys.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">namespace(prefix: string): FlagStore
+</code></pre>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>prefix</code></td>
+<td><code>string</code></td>
+<td>Yes</td>
+<td>The namespace prefix to prepend to all keys</td>
+</tr>
+</tbody></table>
+<p><strong>Returns:</strong> <code>FlagStore</code> — A scoped store instance. All operations on this store prefix keys with <code>prefix.</code>.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const store = createFlagStore()
+
+// Create a namespace
+const player = store.namespace(&#39;player&#39;)
+
+// All operations are prefixed
+player.set(&#39;health&#39;, 100)      // Sets &#39;player.health&#39;
+player.set(&#39;gold&#39;, 50)         // Sets &#39;player.gold&#39;
+
+player.get(&#39;health&#39;)           // 100
+store.get(&#39;player.health&#39;)     // 100 (same value)
+
+player.keys()                  // [&#39;health&#39;, &#39;gold&#39;]
+store.keys()                   // [&#39;player.health&#39;, &#39;player.gold&#39;]
+</code></pre>
+<hr>
+<h2>Behavior Details</h2>
+<h3>Key Prefixing</h3>
+<p>Keys are joined with a dot separator:</p>
+<pre><code class="language-typescript">const ns = store.namespace(&#39;game&#39;)
+ns.set(&#39;score&#39;, 100)           // Actual key: &#39;game.score&#39;
+ns.get(&#39;score&#39;)                // Looks up &#39;game.score&#39;
+ns.has(&#39;score&#39;)                // Checks &#39;game.score&#39;
+ns.delete(&#39;score&#39;)             // Deletes &#39;game.score&#39;
+</code></pre>
+<h3>Shared Data</h3>
+<p>Namespaces are views, not copies. Changes propagate both ways:</p>
+<pre><code class="language-typescript">const player = store.namespace(&#39;player&#39;)
+
+player.set(&#39;health&#39;, 100)
+store.get(&#39;player.health&#39;)     // 100
+
+store.set(&#39;player.gold&#39;, 50)
+player.get(&#39;gold&#39;)             // 50
+</code></pre>
+<h3>Nested Namespaces</h3>
+<p>Namespaces can be nested:</p>
+<pre><code class="language-typescript">const game = store.namespace(&#39;game&#39;)
+const player = game.namespace(&#39;player&#39;)
+const stats = player.namespace(&#39;stats&#39;)
+
+stats.set(&#39;strength&#39;, 10)
+store.get(&#39;game.player.stats.strength&#39;)  // 10
+</code></pre>
+<h3>All Operations Work</h3>
+<p>Every store method works in a namespace:</p>
+<pre><code class="language-typescript">const ns = store.namespace(&#39;prefix&#39;)
+
+ns.set(&#39;key&#39;, &#39;value&#39;)
+ns.get(&#39;key&#39;)
+ns.has(&#39;key&#39;)
+ns.delete(&#39;key&#39;)
+ns.toggle(&#39;flag&#39;)
+ns.increment(&#39;count&#39;)
+ns.decrement(&#39;count&#39;)
+ns.all()
+ns.keys()
+ns.clear()
+ns.setMany({ a: 1, b: 2 })
+ns.subscribe(callback)
+ns.subscribeKey(&#39;key&#39;, callback)
+ns.batch(() =&gt; { /* ... */ })
+ns.compute(&#39;derived&#39;, [&#39;dep&#39;], fn)
+ns.check(&#39;flag&#39;)
+ns.namespace(&#39;nested&#39;)
+</code></pre>
+<h3>Conditions Auto-Prefix</h3>
+<p>Flag names in conditions are automatically prefixed:</p>
+<pre><code class="language-typescript">const player = store.namespace(&#39;player&#39;)
+player.set(&#39;health&#39;, 100)
+player.set(&#39;alive&#39;, true)
+
+// These check &#39;player.health&#39; and &#39;player.alive&#39;
+player.check(&#39;health &gt; 50&#39;)
+player.check(&#39;alive AND health &gt; 0&#39;)
+player.check(&#39;health &gt;= 50 AND alive&#39;)
+</code></pre>
+<h3>Scoped Subscriptions</h3>
+<p>Subscriptions on a namespace only fire for that namespace:</p>
+<pre><code class="language-typescript">const player = store.namespace(&#39;player&#39;)
+const enemy = store.namespace(&#39;enemy&#39;)
+
+player.subscribe((key, value) =&gt; {
+  console.log(`Player ${key}: ${value}`)
+})
+
+player.set(&#39;health&#39;, 100)  // Logs: &quot;Player health: 100&quot;
+enemy.set(&#39;health&#39;, 50)    // No log (different namespace)
+store.set(&#39;global&#39;, true)  // No log (different namespace)
+</code></pre>
+<h3>Scoped Clear</h3>
+<p><code>clear()</code> only affects keys in the namespace:</p>
+<pre><code class="language-typescript">const player = store.namespace(&#39;player&#39;)
+const enemy = store.namespace(&#39;enemy&#39;)
+
+player.set(&#39;health&#39;, 100)
+enemy.set(&#39;health&#39;, 50)
+
+player.clear()
+
+store.has(&#39;player.health&#39;)  // false
+store.has(&#39;enemy.health&#39;)   // true
+</code></pre>
+<h3>Scoped <code>all()</code> and <code>keys()</code></h3>
+<p>These methods return only keys in the namespace, without the prefix:</p>
+<pre><code class="language-typescript">store.set(&#39;player.health&#39;, 100)
+store.set(&#39;player.gold&#39;, 50)
+store.set(&#39;enemy.health&#39;, 30)
+
+const player = store.namespace(&#39;player&#39;)
+player.all()   // { health: 100, gold: 50 }
+player.keys()  // [&#39;health&#39;, &#39;gold&#39;]
+</code></pre>
+<h3>Root Store Access</h3>
+<p>The root store always sees full prefixed keys:</p>
+<pre><code class="language-typescript">const player = store.namespace(&#39;player&#39;)
+player.set(&#39;health&#39;, 100)
+
+store.all()    // { &#39;player.health&#39;: 100 }
+store.keys()   // [&#39;player.health&#39;]
+</code></pre>
+<h3>Keys With Dots</h3>
+<p>Dotted keys work naturally:</p>
+<pre><code class="language-typescript">store.set(&#39;a.b&#39;, &#39;direct&#39;)
+
+const ns = store.namespace(&#39;a&#39;)
+ns.get(&#39;b&#39;)    // &#39;direct&#39; (same key: &#39;a.b&#39;)
+ns.set(&#39;b&#39;, &#39;scoped&#39;)
+store.get(&#39;a.b&#39;)  // &#39;scoped&#39;
+</code></pre>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

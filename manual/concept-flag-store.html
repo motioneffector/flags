@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flag Store - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Flag Store</h1>
+<p>The flag store is the central container for your application state. It holds typed values (boolean, number, or string) identified by string keys, and provides methods to read, write, and query those values.</p>
+<h2>How It Works</h2>
+<p>Think of the store as a smart dictionary. Unlike a plain JavaScript object, the store:</p>
+<ul>
+<li><strong>Validates keys</strong> - No empty strings, spaces, or reserved words like AND/OR/NOT</li>
+<li><strong>Validates values</strong> - Only boolean, number, or string (no objects, arrays, or null)</li>
+<li><strong>Notifies subscribers</strong> - Changes trigger callbacks so your UI can react</li>
+<li><strong>Supports conditions</strong> - Query multiple flags with expressions like <code>gold &gt;= 100 AND has_key</code></li>
+</ul>
+<pre><code>┌─────────────────────────────────────────┐
+│              Flag Store                 │
+├─────────────────────────────────────────┤
+│  gold: 150          (number)            │
+│  has_key: true      (boolean)           │
+│  player_name: &quot;Ada&quot; (string)            │
+│  reputation: 75     (number)            │
+└─────────────────────────────────────────┘
+         ↓                    ↓
+   store.get(&#39;gold&#39;)    store.check(&#39;gold &gt;= 100&#39;)
+         ↓                    ↓
+        150                  true
+</code></pre>
+<h2>Basic Usage</h2>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: {
+    gold: 0,
+    has_key: false,
+    player_name: &#39;Hero&#39;
+  }
+})
+
+// Read values
+store.get(&#39;gold&#39;)        // 0
+store.get(&#39;has_key&#39;)     // false
+store.get(&#39;missing&#39;)     // undefined
+
+// Write values
+store.set(&#39;gold&#39;, 100)
+store.set(&#39;has_key&#39;, true)
+
+// Check existence
+store.has(&#39;gold&#39;)        // true
+store.has(&#39;missing&#39;)     // false
+</code></pre>
+<p>All <code>set()</code> operations return the store, so you can chain calls:</p>
+<pre><code class="language-typescript">store
+  .set(&#39;gold&#39;, 100)
+  .set(&#39;has_key&#39;, true)
+  .set(&#39;reputation&#39;, 50)
+</code></pre>
+<h2>Key Points</h2>
+<ul>
+<li><p><strong>Three value types only</strong> - Boolean, number, and string. Objects and arrays are not supported. This keeps the store simple and serializable.</p>
+</li>
+<li><p><strong>Keys are validated</strong> - Keys cannot be empty, contain spaces, or use reserved words (AND, OR, NOT). Keys like <code>player.health</code> with dots are allowed (useful for organizing).</p>
+</li>
+<li><p><strong>Setting null/undefined deletes</strong> - <code>store.set(&#39;key&#39;, null)</code> removes the key entirely, equivalent to <code>store.delete(&#39;key&#39;)</code>.</p>
+</li>
+<li><p><strong>Missing keys return undefined</strong> - <code>store.get(&#39;nonexistent&#39;)</code> returns <code>undefined</code>, not an error. In conditions, missing keys are treated as falsy (0).</p>
+</li>
+</ul>
+<h2>Examples</h2>
+<h3>Game State</h3>
+<pre><code class="language-typescript">const store = createFlagStore({
+  initial: {
+    player_health: 100,
+    player_gold: 0,
+    has_sword: false,
+    current_level: 1
+  }
+})
+
+// Player takes damage
+store.decrement(&#39;player_health&#39;, 25)
+
+// Player finds gold
+store.increment(&#39;player_gold&#39;, 50)
+
+// Player gets a sword
+store.set(&#39;has_sword&#39;, true)
+
+// Check if player can proceed
+if (store.check(&#39;has_sword AND current_level &gt;= 1&#39;)) {
+  store.increment(&#39;current_level&#39;)
+}
+</code></pre>
+<h3>Feature Flags</h3>
+<pre><code class="language-typescript">const store = createFlagStore({
+  initial: {
+    dark_mode: false,
+    beta_features: false,
+    max_items: 10
+  }
+})
+
+// Toggle dark mode
+store.toggle(&#39;dark_mode&#39;)
+
+// Enable beta for testing
+store.set(&#39;beta_features&#39;, true)
+
+// Increase limit for premium users
+store.set(&#39;max_items&#39;, 100)
+</code></pre>
+<h2>Related</h2>
+<ul>
+<li><strong><a href="concept-condition-expressions.html">Condition Expressions</a></strong> - Query the store with complex logic</li>
+<li><strong><a href="concept-subscriptions.html">Subscriptions</a></strong> - React when values change</li>
+<li><strong><a href="guide-persisting-state.html">Persisting State</a></strong> - Save the store to localStorage</li>
+<li><strong><a href="api-reading-and-writing.html">API: Reading and Writing</a></strong> - Full method reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

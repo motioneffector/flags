@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History API - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>History API</h1>
+<p>Undo and redo operations for stores created with history enabled.</p>
+<p>These methods are only available when the store is created with <code>history: true</code> or <code>history: { ... }</code>.</p>
+<hr>
+<h2><code>undo()</code></h2>
+<p>Reverts the store to its previous state.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">undo(): boolean
+</code></pre>
+<p><strong>Returns:</strong> <code>boolean</code> — <code>true</code> if an undo was performed, <code>false</code> if there&#39;s nothing to undo.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const store = createFlagStore({ history: true })
+
+store.set(&#39;count&#39;, 1)
+store.set(&#39;count&#39;, 2)
+store.set(&#39;count&#39;, 3)
+
+store.undo()           // true
+store.get(&#39;count&#39;)     // 2
+
+store.undo()           // true
+store.get(&#39;count&#39;)     // 1
+
+store.undo()           // true
+store.get(&#39;count&#39;)     // undefined (initial state)
+
+store.undo()           // false (nothing left to undo)
+</code></pre>
+<hr>
+<h2><code>redo()</code></h2>
+<p>Re-applies the next state in the redo stack.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">redo(): boolean
+</code></pre>
+<p><strong>Returns:</strong> <code>boolean</code> — <code>true</code> if a redo was performed, <code>false</code> if there&#39;s nothing to redo.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const store = createFlagStore({ history: true })
+
+store.set(&#39;count&#39;, 1)
+store.set(&#39;count&#39;, 2)
+
+store.undo()           // count: 1
+store.redo()           // true, count: 2
+store.redo()           // false (nothing to redo)
+</code></pre>
+<p>Note: The redo stack is cleared when a new change is made after an undo.</p>
+<pre><code class="language-typescript">store.set(&#39;count&#39;, 1)
+store.set(&#39;count&#39;, 2)
+store.undo()           // count: 1
+store.set(&#39;count&#39;, 3)  // New change clears redo stack
+store.redo()           // false (redo stack was cleared)
+</code></pre>
+<hr>
+<h2><code>canUndo()</code></h2>
+<p>Checks if there are undoable states.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">canUndo(): boolean
+</code></pre>
+<p><strong>Returns:</strong> <code>boolean</code> — <code>true</code> if <code>undo()</code> can be called successfully.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const store = createFlagStore({ history: true })
+
+store.canUndo()        // false (fresh store)
+
+store.set(&#39;x&#39;, 1)
+store.canUndo()        // true
+
+store.undo()
+store.canUndo()        // false
+</code></pre>
+<hr>
+<h2><code>canRedo()</code></h2>
+<p>Checks if there are redoable states.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">canRedo(): boolean
+</code></pre>
+<p><strong>Returns:</strong> <code>boolean</code> — <code>true</code> if <code>redo()</code> can be called successfully.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const store = createFlagStore({ history: true })
+
+store.canRedo()        // false (fresh store)
+
+store.set(&#39;x&#39;, 1)
+store.canRedo()        // false (no undos yet)
+
+store.undo()
+store.canRedo()        // true
+
+store.redo()
+store.canRedo()        // false (redo stack exhausted)
+</code></pre>
+<hr>
+<h2><code>clearHistory()</code></h2>
+<p>Clears all undo and redo history.</p>
+<p><strong>Signature:</strong></p>
+<pre><code class="language-typescript">clearHistory(): void
+</code></pre>
+<p><strong>Returns:</strong> <code>void</code></p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-typescript">const store = createFlagStore({ history: true })
+
+store.set(&#39;x&#39;, 1)
+store.set(&#39;x&#39;, 2)
+store.undo()
+
+store.canUndo()        // true
+store.canRedo()        // true
+
+store.clearHistory()
+
+store.canUndo()        // false
+store.canRedo()        // false
+store.get(&#39;x&#39;)         // 1 (current state preserved)
+</code></pre>
+<hr>
+<h2>Behavior Details</h2>
+<h3>Subscriptions Fire Normally</h3>
+<p>Undo and redo operations trigger subscriptions:</p>
+<pre><code class="language-typescript">store.subscribe((key, newVal, oldVal) =&gt; {
+  console.log(`${key}: ${oldVal} -&gt; ${newVal}`)
+})
+
+store.set(&#39;x&#39;, 1)      // Logs: &quot;x: undefined -&gt; 1&quot;
+store.set(&#39;x&#39;, 2)      // Logs: &quot;x: 1 -&gt; 2&quot;
+store.undo()           // Logs: &quot;x: 2 -&gt; 1&quot;
+store.redo()           // Logs: &quot;x: 1 -&gt; 2&quot;
+</code></pre>
+<h3>Batch as Single Step</h3>
+<p>Batch operations create a single undo step:</p>
+<pre><code class="language-typescript">store.batch(() =&gt; {
+  store.set(&#39;a&#39;, 1)
+  store.set(&#39;b&#39;, 2)
+  store.set(&#39;c&#39;, 3)
+})
+
+store.undo()           // Reverts ALL three changes
+store.get(&#39;a&#39;)         // undefined
+store.get(&#39;b&#39;)         // undefined
+store.get(&#39;c&#39;)         // undefined
+</code></pre>
+<h3>setMany as Single Step</h3>
+<p><code>setMany()</code> also creates a single undo step:</p>
+<pre><code class="language-typescript">store.setMany({ a: 1, b: 2, c: 3 })
+
+store.undo()           // Reverts all three
+</code></pre>
+<h3>History Limit</h3>
+<p>Configure maximum history size to limit memory usage:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  history: { maxHistory: 10 }
+})
+
+// Make 15 changes
+for (let i = 0; i &lt; 15; i++) {
+  store.set(&#39;x&#39;, i)
+}
+
+// Can only undo 10 times (oldest 5 discarded)
+let undoCount = 0
+while (store.canUndo()) {
+  store.undo()
+  undoCount++
+}
+// undoCount === 10
+</code></pre>
+<p>Default <code>maxHistory</code> is 100.</p>
+<h3>With Persistence</h3>
+<p>History operations are persisted when persistence is enabled:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  history: true,
+  persist: { storage: localStorage }
+})
+
+store.set(&#39;x&#39;, 1)      // Saved
+store.set(&#39;x&#39;, 2)      // Saved
+store.undo()           // Saved (x reverts to 1)
+</code></pre>
+<hr>
+<h2>Types</h2>
+<h3><code>FlagStoreWithHistory</code></h3>
+<pre><code class="language-typescript">interface FlagStoreWithHistory extends FlagStore {
+  undo(): boolean
+  redo(): boolean
+  canUndo(): boolean
+  canRedo(): boolean
+  clearHistory(): void
+}
+</code></pre>
+<p>Cast the store to access history methods:</p>
+<pre><code class="language-typescript">import { createFlagStore, FlagStoreWithHistory } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({ history: true }) as FlagStoreWithHistory
+
+store.undo()  // TypeScript knows this exists
+</code></pre>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

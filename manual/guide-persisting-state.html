@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Persisting State - @motioneffector/flags</title>
+  <link rel="stylesheet" href="../demo-files/demo.css">
+  <link rel="stylesheet" href="manual.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1 class="header-title">@motioneffector/flags</h1>
+      <p class="header-description">Documentation</p>
+      <nav class="header-links">
+        <a href="../index.html" class="header-link">Demo</a>
+        <a href="https://www.npmjs.com/package/@motioneffector/flags" class="header-link">npm</a>
+        <a href="https://github.com/motioneffector/flags" class="header-link">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="manual-layout">
+      <aside class="manual-sidebar">
+        <nav class="sidebar-nav">
+<p><strong><a href="index.html">@motioneffector/flags</a></strong></p>
+<p><strong>Getting Started</strong></p>
+<ul>
+<li><a href="installation.html">Installation</a></li>
+<li><a href="your-first-flag-store.html">Your First Flag Store</a></li>
+</ul>
+<p><strong>Core Concepts</strong></p>
+<ul>
+<li><a href="concept-flag-store.html">Flag Store</a></li>
+<li><a href="concept-condition-expressions.html">Condition Expressions</a></li>
+<li><a href="concept-subscriptions.html">Subscriptions</a></li>
+<li><a href="concept-computed-flags.html">Computed Flags</a></li>
+<li><a href="concept-namespaces.html">Namespaces</a></li>
+</ul>
+<p><strong>Guides</strong></p>
+<ul>
+<li><a href="guide-persisting-state.html">Persisting State</a></li>
+<li><a href="guide-undo-redo-history.html">Undo/Redo History</a></li>
+<li><a href="guide-batch-operations.html">Batch Operations</a></li>
+<li><a href="guide-working-with-numeric-flags.html">Working with Numeric Flags</a></li>
+</ul>
+<p><strong>API Reference</strong></p>
+<ul>
+<li><a href="api-store-creation.html">Store Creation</a></li>
+<li><a href="api-reading-and-writing.html">Reading and Writing</a></li>
+<li><a href="api-conditions.html">Conditions</a></li>
+<li><a href="api-subscriptions.html">Subscriptions</a></li>
+<li><a href="api-computed-flags.html">Computed Flags</a></li>
+<li><a href="api-namespaces.html">Namespaces</a></li>
+<li><a href="api-history.html">History</a></li>
+<li><a href="api-persistence.html">Persistence</a></li>
+<li><a href="api-batch-operations.html">Batch Operations</a></li>
+<li><a href="api-types.html">Types</a></li>
+<li><a href="api-errors.html">Errors</a></li>
+</ul>
+
+        </nav>
+      </aside>
+
+      <main class="manual-content">
+        <article class="manual-article">
+<h1>Persisting State</h1>
+<p>Save your flag store to localStorage (or any storage backend) so state survives page reloads and browser sessions.</p>
+<h2>Prerequisites</h2>
+<p>Before starting, you should:</p>
+<ul>
+<li><a href="concept-flag-store.html">Understand how the Flag Store works</a></li>
+</ul>
+<h2>Overview</h2>
+<p>We&#39;ll persist state by:</p>
+<ol>
+<li>Configuring the store with a <code>persist</code> option</li>
+<li>Understanding auto-save behavior</li>
+<li>Using a custom storage key</li>
+<li>Handling storage errors</li>
+</ol>
+<h2>Step 1: Enable Persistence</h2>
+<p>Pass a <code>persist</code> option with your storage backend:</p>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: { gold: 0, level: 1 },
+  persist: {
+    storage: localStorage
+  }
+})
+</code></pre>
+<p>The store now automatically saves to localStorage after every change and loads existing data on creation.</p>
+<h2>Step 2: Understand Auto-Save</h2>
+<p>By default, every change triggers a save:</p>
+<pre><code class="language-typescript">store.set(&#39;gold&#39;, 100)      // Saved automatically
+store.increment(&#39;level&#39;)    // Saved automatically
+store.toggle(&#39;has_sword&#39;)   // Saved automatically
+</code></pre>
+<p>Disable auto-save if you want manual control:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: {
+    storage: localStorage,
+    autoSave: false
+  }
+})
+
+store.set(&#39;gold&#39;, 100)   // NOT saved
+store.set(&#39;level&#39;, 5)    // NOT saved
+
+store.save()             // NOW saved
+</code></pre>
+<h2>Step 3: Use a Custom Storage Key</h2>
+<p>The default key is <code>@motioneffector/flags</code>. Use a custom key to avoid conflicts:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: {
+    storage: localStorage,
+    key: &#39;my-game-save&#39;
+  }
+})
+</code></pre>
+<p>Multiple stores can coexist with different keys:</p>
+<pre><code class="language-typescript">const gameStore = createFlagStore({
+  persist: { storage: localStorage, key: &#39;game-state&#39; }
+})
+
+const settingsStore = createFlagStore({
+  persist: { storage: localStorage, key: &#39;user-settings&#39; }
+})
+</code></pre>
+<h2>Step 4: Handle Initial Values vs Persisted State</h2>
+<p>When both <code>initial</code> and <code>persist</code> are provided, persisted data wins:</p>
+<pre><code class="language-typescript">// First run (nothing in localStorage)
+const store = createFlagStore({
+  initial: { gold: 0 },
+  persist: { storage: localStorage }
+})
+store.get(&#39;gold&#39;)  // 0 (from initial)
+
+store.set(&#39;gold&#39;, 500)  // Saved to localStorage
+
+// Later / page reload
+const store2 = createFlagStore({
+  initial: { gold: 0 },  // Ignored
+  persist: { storage: localStorage }
+})
+store2.get(&#39;gold&#39;)  // 500 (from localStorage)
+</code></pre>
+<p>Use <code>initial</code> as defaults for first-time users. Persisted data overrides them.</p>
+<h2>Complete Example</h2>
+<pre><code class="language-typescript">import { createFlagStore } from &#39;@motioneffector/flags&#39;
+
+const store = createFlagStore({
+  initial: {
+    gold: 0,
+    level: 1,
+    has_sword: false,
+    player_name: &#39;Hero&#39;
+  },
+  persist: {
+    storage: localStorage,
+    key: &#39;my-rpg-save&#39;
+  }
+})
+
+// All changes are automatically saved
+store.set(&#39;player_name&#39;, &#39;Ada&#39;)
+store.increment(&#39;gold&#39;, 100)
+store.set(&#39;has_sword&#39;, true)
+
+// On page reload, state is restored automatically
+</code></pre>
+<h2>Variations</h2>
+<h3>Using sessionStorage</h3>
+<p>For state that should clear when the browser closes:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: { storage: sessionStorage }
+})
+</code></pre>
+<h3>Custom Storage Backend</h3>
+<p>Implement the <code>Storage</code> interface for custom backends:</p>
+<pre><code class="language-typescript">const customStorage = {
+  getItem(key: string): string | null {
+    // Read from your backend
+    return myDatabase.get(key)
+  },
+  setItem(key: string, value: string): void {
+    // Write to your backend
+    myDatabase.set(key, value)
+  },
+  removeItem(key: string): void {
+    // Delete from your backend
+    myDatabase.delete(key)
+  }
+}
+
+const store = createFlagStore({
+  persist: { storage: customStorage }
+})
+</code></pre>
+<h3>Manual Save/Load</h3>
+<p>With <code>autoSave: false</code>, use explicit save/load:</p>
+<pre><code class="language-typescript">const store = createFlagStore({
+  persist: { storage: localStorage, autoSave: false }
+})
+
+// Make many changes
+store.set(&#39;a&#39;, 1)
+store.set(&#39;b&#39;, 2)
+store.set(&#39;c&#39;, 3)
+
+// Save once at the end
+store.save()
+
+// Later, reload from storage
+store.load()
+</code></pre>
+<h2>Troubleshooting</h2>
+<h3>State Not Persisting</h3>
+<p><strong>Symptom:</strong> Changes are lost on page reload.</p>
+<p><strong>Cause:</strong> Storage might be unavailable (private browsing) or full.</p>
+<p><strong>Solution:</strong> The store logs errors to console but doesn&#39;t throw. Check for <code>console.error</code> messages about failed persistence.</p>
+<h3>Conflicting Data</h3>
+<p><strong>Symptom:</strong> Multiple apps/tabs overwrite each other&#39;s data.</p>
+<p><strong>Cause:</strong> Using the same storage key.</p>
+<p><strong>Solution:</strong> Use unique keys per store: <code>persist: { key: &#39;my-app-flags&#39; }</code>.</p>
+<h3>Corrupted Data</h3>
+<p><strong>Symptom:</strong> Store doesn&#39;t load or has wrong values.</p>
+<p><strong>Cause:</strong> Manual edits to localStorage or incompatible data format.</p>
+<p><strong>Solution:</strong> The store handles corrupted JSON gracefully (logs error, starts fresh). Clear localStorage manually if needed.</p>
+<h2>See Also</h2>
+<ul>
+<li><strong><a href="concept-flag-store.html">Flag Store</a></strong> - How values are stored</li>
+<li><strong><a href="api-persistence.html">API: Persistence</a></strong> - <code>save()</code> and <code>load()</code> reference</li>
+</ul>
+
+        </article>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
