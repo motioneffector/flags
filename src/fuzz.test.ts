@@ -319,6 +319,7 @@ describe('Fuzz: store.set()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -342,6 +343,7 @@ describe('Fuzz: store.set()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -360,9 +362,11 @@ describe('Fuzz: store.set()', () => {
 
       // Create a new object and verify it's not polluted
       const testObj = {}
-      expect((testObj as any).polluted).toBeUndefined()
+      const hasPolluted = Object.prototype.hasOwnProperty.call(testObj, 'polluted')
+      expect(hasPolluted).toBe(false)
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -395,6 +399,7 @@ describe('Fuzz: store.get()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -413,6 +418,7 @@ describe('Fuzz: store.get()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -447,6 +453,7 @@ describe('Fuzz: store.increment()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -474,13 +481,14 @@ describe('Fuzz: store.increment()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
   it('handles Infinity correctly', () => {
     // Security fix: Infinity values are now rejected
-    expect(() => store.set('inf', Infinity)).toThrow(ValidationError)
-    expect(() => store.set('negInf', -Infinity)).toThrow(ValidationError)
+    expect(() => store.set('inf', Infinity)).toThrow(/must be finite/)
+    expect(() => store.set('negInf', -Infinity)).toThrow(/must be finite/)
   })
 })
 
@@ -511,6 +519,7 @@ describe('Fuzz: store.decrement()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -527,6 +536,7 @@ describe('Fuzz: store.decrement()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -560,6 +570,7 @@ describe('Fuzz: store.toggle()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -585,6 +596,7 @@ describe('Fuzz: store.toggle()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -619,6 +631,7 @@ describe('Fuzz: store.check()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -637,6 +650,7 @@ describe('Fuzz: store.check()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -651,13 +665,14 @@ describe('Fuzz: store.check()', () => {
     for (const injection of codeInjections) {
       try {
         store.check(injection)
-      } catch {
-        // ParseError is fine, just shouldn't execute code
+      } catch (error) {
+        expect(error).toBeInstanceOf(ParseError)
       }
 
       // Verify no code was executed
       const obj = {}
-      expect((obj as any).polluted).toBeUndefined()
+      const hasPolluted = Object.prototype.hasOwnProperty.call(obj, 'polluted')
+      expect(hasPolluted).toBe(false)
     }
   })
 
@@ -672,8 +687,8 @@ describe('Fuzz: store.check()', () => {
     const deepNest = '('.repeat(50) + 'flag1' + ')'.repeat(50)
     try {
       store.check(deepNest)
-    } catch {
-      // ParseError is ok
+    } catch (error) {
+      expect(error).toBeInstanceOf(ParseError)
     }
 
     const duration = Date.now() - start
@@ -687,6 +702,7 @@ describe('Fuzz: store.check()', () => {
       expect(result).toBe(false)
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -733,6 +749,7 @@ describe('Fuzz: store.setMany()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -751,6 +768,7 @@ describe('Fuzz: store.setMany()', () => {
       expect(store.all()).toEqual(snapshot)
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -783,6 +801,7 @@ describe('Fuzz: store.batch()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -798,6 +817,7 @@ describe('Fuzz: store.batch()', () => {
       expect(result).toBe(expectedResult)
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -816,6 +836,7 @@ describe('Fuzz: store.batch()', () => {
       expect(store.has('inner')).toBe(true)
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -862,6 +883,7 @@ describe('Fuzz: store.compute()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -872,13 +894,13 @@ describe('Fuzz: store.compute()', () => {
     // b depends on a, now try to make a depend on b (should fail)
     expect(() => {
       store.compute('a', ['b'], () => 3)
-    }).toThrow(Error)
+    }).toThrow(/Circular dependency detected/)
   })
 
   it('detects self-dependency', () => {
     expect(() => {
       store.compute('recursive', ['recursive'], () => 42)
-    }).toThrow(Error)
+    }).toThrow(/cannot depend on itself/)
   })
 })
 
@@ -939,6 +961,7 @@ describe('Fuzz: FlagStore lifecycle', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -996,6 +1019,7 @@ describe('Fuzz: FlagStoreWithHistory lifecycle', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -1064,6 +1088,7 @@ describe('Fuzz: FlagStoreWithPersistence lifecycle', () => {
       expect(afterLoad).toEqual(beforeSave)
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -1121,6 +1146,7 @@ describe('Fuzz: store.subscribe()', () => {
       expect(notificationCount).toBe(beforeCount)
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -1137,6 +1163,8 @@ describe('Fuzz: store.subscribe()', () => {
 
     // All changes should be recorded
     expect(changes.length).toBe(100)
+    expect(changes[0]).toBe('key0')
+    expect(changes[99]).toBe('key99')
   })
 })
 
@@ -1176,6 +1204,7 @@ describe('Fuzz: store.subscribeKey()', () => {
       expect(targetCount).toBeGreaterThan(0)
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -1211,6 +1240,7 @@ describe('Fuzz: store.namespace()', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 
@@ -1256,6 +1286,7 @@ describe('Property: Increment/Decrement Roundtrip', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -1279,6 +1310,7 @@ describe('Property: Toggle Idempotence', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -1299,6 +1331,7 @@ describe('Property: Set/Get Consistency', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -1318,6 +1351,7 @@ describe('Property: Check Commutativity', () => {
       expect(store.check('a OR b')).toBe(store.check('b OR a'))
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -1355,6 +1389,7 @@ describe('Property: Batch Atomicity', () => {
       expect(store.all()).toEqual(snapshot)
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })
@@ -1379,6 +1414,7 @@ describe('Property: Subscription Notification Count', () => {
       }
     })
 
+    expect(iterCount).toBeGreaterThan(0)
     if (THOROUGH_MODE) console.log(`  Completed ${iterCount} iterations`)
   })
 })

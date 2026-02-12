@@ -328,6 +328,7 @@ export function createFlagStore(
         callback(key, newValue, oldValue)
       } catch (error) {
         console.error('Subscriber error:', error)
+        continue
       }
     }
   }
@@ -351,6 +352,7 @@ export function createFlagStore(
           callback(newValue, oldValue)
         } catch (error) {
           console.error('Key subscriber error:', error)
+          continue
         }
       }
     }
@@ -370,6 +372,7 @@ export function createFlagStore(
       storage.setItem(storageKey, JSON.stringify(data))
     } catch (error) {
       console.error('Failed to persist state:', error)
+      return
     }
   }
 
@@ -398,6 +401,7 @@ export function createFlagStore(
       }
     } catch (error) {
       console.error('Failed to load state from storage:', error)
+      return
     }
   }
 
@@ -431,7 +435,7 @@ export function createFlagStore(
       }
     } catch (error) {
       console.error(`Error computing flag '${key}':`, error)
-      // Don't update the value if computation fails
+      return
     }
   }
 
@@ -1003,6 +1007,7 @@ export function createFlagStore(
         storage.setItem(storageKey, JSON.stringify(data))
       } catch (error) {
         console.error('Failed to save state:', error)
+        return
       }
     }
 
@@ -1036,6 +1041,7 @@ export function createFlagStore(
         updateAllComputedFlags()
       } catch (error) {
         console.error('Failed to load state:', error)
+        return
       }
     }
   }

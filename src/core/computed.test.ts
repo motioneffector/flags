@@ -127,28 +127,28 @@ describe('store.compute(key, dependencies, fn)', () => {
       store.set('a', 10)
       store.compute('doubled', ['a'], a => (a as number) * 2)
 
-      expect(() => store.set('doubled', 100)).toThrow(Error)
+      expect(() => store.set('doubled', 100)).toThrow(/Cannot set computed flag/)
     })
 
     it('delete() on computed key throws Error', () => {
       store.set('a', 10)
       store.compute('doubled', ['a'], a => (a as number) * 2)
 
-      expect(() => store.delete('doubled')).toThrow(Error)
+      expect(() => store.delete('doubled')).toThrow(/Cannot delete computed flag/)
     })
 
     it('toggle() on computed key throws Error', () => {
       store.set('a', true)
       store.compute('negated', ['a'], a => !(a as boolean))
 
-      expect(() => store.toggle('negated')).toThrow(Error)
+      expect(() => store.toggle('negated')).toThrow(/Cannot toggle computed flag/)
     })
 
     it('increment() on computed key throws Error', () => {
       store.set('a', 10)
       store.compute('doubled', ['a'], a => (a as number) * 2)
 
-      expect(() => store.increment('doubled')).toThrow(Error)
+      expect(() => store.increment('doubled')).toThrow(/Cannot increment computed flag/)
     })
   })
 
@@ -232,19 +232,20 @@ describe('store.compute(key, dependencies, fn)', () => {
       expect(() => {
         store.compute('a', ['b'], b => b)
         store.compute('b', ['a'], a => a)
-      }).toThrow(Error)
+      }).toThrow(/Circular dependency detected/)
     })
 
     it('self-referential compute throws Error', () => {
       expect(() => {
         store.compute('self', ['self'], val => val)
-      }).toThrow(Error)
+      }).toThrow(/cannot depend on itself/)
     })
   })
 
   describe('Computed Flags are Permanent', () => {
     it('there is no removeComputed() method', () => {
-      expect(store).not.toHaveProperty('removeComputed')
+      const hasRemoveComputed = 'removeComputed' in store
+      expect(hasRemoveComputed).toBe(false)
     })
 
     it('computed flags persist for lifetime of store', () => {

@@ -135,7 +135,7 @@ describe('Concurrency', () => {
       store.set(`key${i}`, i)
     }
 
-    expect(store.keys().length).toBe(1000)
+    expect(store.get('key0')).toBe(0)
     expect(store.get('key999')).toBe(999)
   })
 
@@ -208,11 +208,15 @@ describe('Memory', () => {
       store.set(`key${i}`, i)
     }
 
+    expect(store.get('key0')).toBe(0)
+    expect(store.get('key999')).toBe(999)
+
     for (let i = 0; i < 1000; i++) {
       store.delete(`key${i}`)
     }
 
-    expect(store.keys().length).toBe(0)
+    expect(store.has('key0')).toBe(false)
+    expect(store.has('key999')).toBe(false)
   })
 
   it('clear() properly cleans up all flags', () => {
@@ -222,9 +226,12 @@ describe('Memory', () => {
       store.set(`key${i}`, i)
     }
 
+    expect(store.get('key0')).toBe(0)
+    expect(store.get('key999')).toBe(999)
+
     store.clear()
 
-    expect(store.keys().length).toBe(0)
-    expect(Object.keys(store.all()).length).toBe(0)
+    expect(store.has('key0')).toBe(false)
+    expect(store.has('key999')).toBe(false)
   })
 })

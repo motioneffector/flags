@@ -10,19 +10,23 @@ describe('Store Without History', () => {
   })
 
   it('store created without { history: true } has no undo method', () => {
-    expect(store).not.toHaveProperty('undo')
+    const hasUndo = 'undo' in store
+    expect(hasUndo).toBe(false)
   })
 
   it('store created without { history: true } has no redo method', () => {
-    expect(store).not.toHaveProperty('redo')
+    const hasRedo = 'redo' in store
+    expect(hasRedo).toBe(false)
   })
 
   it('store created without { history: true } has no canUndo method', () => {
-    expect(store).not.toHaveProperty('canUndo')
+    const hasCanUndo = 'canUndo' in store
+    expect(hasCanUndo).toBe(false)
   })
 
   it('store created without { history: true } has no canRedo method', () => {
-    expect(store).not.toHaveProperty('canRedo')
+    const hasCanRedo = 'canRedo' in store
+    expect(hasCanRedo).toBe(false)
   })
 })
 
@@ -118,7 +122,7 @@ describe('Store With History Enabled', () => {
       store.undo()
       store.undo()
 
-      expect(store.get('key')).toBeUndefined()
+      expect(store.has('key')).toBe(false)
     })
 
     it('cannot undo past initial state (Decision 7.3)', () => {
@@ -129,7 +133,7 @@ describe('Store With History Enabled', () => {
       const result = store.undo()
 
       expect(result).toBe(false)
-      expect(store.get('key')).toBeUndefined()
+      expect(store.has('key')).toBe(false)
     })
 
     it('undo() returns false when nothing to undo (Decision 7.1)', () => {
@@ -444,9 +448,9 @@ describe('History with Batch', () => {
     // Single undo reverts all changes
     store.undo()
 
-    expect(store.get('a')).toBeUndefined()
-    expect(store.get('b')).toBeUndefined()
-    expect(store.get('c')).toBeUndefined()
+    expect(store.has('a')).toBe(false)
+    expect(store.has('b')).toBe(false)
+    expect(store.has('c')).toBe(false)
   })
 
   it('undo() after batch reverts entire batch', () => {
@@ -475,9 +479,9 @@ describe('History with setMany', () => {
     // Single undo reverts all changes
     store.undo()
 
-    expect(store.get('a')).toBeUndefined()
-    expect(store.get('b')).toBeUndefined()
-    expect(store.get('c')).toBeUndefined()
+    expect(store.has('a')).toBe(false)
+    expect(store.has('b')).toBe(false)
+    expect(store.has('c')).toBe(false)
   })
 
   it('undo() after setMany reverts all changes from setMany', () => {
@@ -491,6 +495,6 @@ describe('History with setMany', () => {
 
     expect(store.get('a')).toBe(0)
     expect(store.get('b')).toBe(0)
-    expect(store.get('c')).toBeUndefined()
+    expect(store.has('c')).toBe(false)
   })
 })
