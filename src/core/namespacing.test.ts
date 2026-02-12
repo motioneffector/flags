@@ -12,14 +12,16 @@ describe('store.namespace(prefix)', () => {
   describe('Basic Namespacing', () => {
     it('namespace() returns a scoped store view', () => {
       const scoped = store.namespace('prefix')
-      expect(scoped).toBeDefined()
-      expect(typeof scoped.get).toBe('function')
-      expect(typeof scoped.set).toBe('function')
-      expect(typeof scoped.has).toBe('function')
-      expect(typeof scoped.delete).toBe('function')
-      expect(typeof scoped.clear).toBe('function')
-      expect(typeof scoped.all).toBe('function')
-      expect(typeof scoped.keys).toBe('function')
+      scoped.set('testKey', 'testValue')
+      expect(scoped.get('testKey')).toBe('testValue')
+      expect(scoped.has('testKey')).toBe(true)
+      scoped.delete('testKey')
+      expect(scoped.has('testKey')).toBe(false)
+      scoped.set('a', 1)
+      expect(scoped.all()).toEqual({ a: 1 })
+      expect(scoped.keys()).toContain('a')
+      scoped.clear()
+      expect(scoped.has('a')).toBe(false)
     })
 
     it("scoped.set('key', value) actually sets 'prefix.key' in root store", () => {
@@ -115,7 +117,8 @@ describe('store.namespace(prefix)', () => {
       const all = scoped.all()
 
       expect(all).toEqual({ a: 1, b: 2 })
-      expect(all).not.toHaveProperty('c')
+      const hasC = 'c' in all
+      expect(hasC).toBe(false)
     })
 
     it('scoped.keys() returns only keys under prefix (without prefix in keys)', () => {

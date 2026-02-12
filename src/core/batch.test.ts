@@ -109,9 +109,9 @@ describe('store.batch(fn)', () => {
 
       store.undo()
 
-      expect(store.get('a')).toBeUndefined()
-      expect(store.get('b')).toBeUndefined()
-      expect(store.get('c')).toBeUndefined()
+      expect(store.has('a')).toBe(false)
+      expect(store.has('b')).toBe(false)
+      expect(store.has('c')).toBe(false)
     })
 
     it('undo after batch reverts all changes in batch', () => {
@@ -199,11 +199,11 @@ describe('store.batch(fn)', () => {
           throw new Error('Batch error')
         })
       } catch (e) {
-        // Expected
+        expect((e as Error).message).toBe('Batch error')
       }
 
       expect(store.get('a')).toBe(0)
-      expect(store.get('b')).toBeUndefined()
+      expect(store.has('b')).toBe(false)
     })
 
     it('store state unchanged after error in batch', () => {
@@ -215,7 +215,7 @@ describe('store.batch(fn)', () => {
           throw new Error('Batch error')
         })
       } catch (e) {
-        // Expected
+        expect((e as Error).message).toBe('Batch error')
       }
 
       expect(store.get('existing')).toBe('value')
@@ -232,7 +232,7 @@ describe('store.batch(fn)', () => {
           throw new Error('Batch error')
         })
       } catch (e) {
-        // Expected
+        expect((e as Error).message).toBe('Batch error')
       }
 
       expect(callback).not.toHaveBeenCalled()

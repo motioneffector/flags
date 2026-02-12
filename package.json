@@ -1,6 +1,6 @@
 {
   "name": "@motioneffector/flags",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TypeScript library for managing application state flags with powerful condition evaluation",
   "author": "motioneffector",
   "license": "MIT",

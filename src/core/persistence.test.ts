@@ -6,31 +6,38 @@ import type { FlagStore } from '../types'
 describe('Storage Interface', () => {
   it('storage object must have getItem(key) method', () => {
     const storage = new MockStorage()
-    expect(typeof storage.getItem).toBe('function')
+    storage.setItem('testKey', 'testValue')
+    expect(storage.getItem('testKey')).toBe('testValue')
   })
 
   it('storage object must have setItem(key, value) method', () => {
     const storage = new MockStorage()
-    expect(typeof storage.setItem).toBe('function')
+    storage.setItem('k', 'v')
+    expect(storage.getItem('k')).toBe('v')
   })
 
   it('storage object must have removeItem(key) method', () => {
     const storage = new MockStorage()
-    expect(typeof storage.removeItem).toBe('function')
+    storage.setItem('k', 'v')
+    expect(storage.getItem('k')).toBe('v')
+    storage.removeItem('k')
+    expect(storage.getItem('k')).toBe(null)
   })
 
   it.skipIf(typeof localStorage === 'undefined')('localStorage satisfies storage interface', () => {
-    expect(typeof localStorage.getItem).toBe('function')
-    expect(typeof localStorage.setItem).toBe('function')
-    expect(typeof localStorage.removeItem).toBe('function')
+    localStorage.setItem('__test__', 'val')
+    expect(localStorage.getItem('__test__')).toBe('val')
+    localStorage.removeItem('__test__')
+    expect(localStorage.getItem('__test__')).toBe(null)
   })
 
   it.skipIf(typeof sessionStorage === 'undefined')(
     'sessionStorage satisfies storage interface',
     () => {
-      expect(typeof sessionStorage.getItem).toBe('function')
-      expect(typeof sessionStorage.setItem).toBe('function')
-      expect(typeof sessionStorage.removeItem).toBe('function')
+      sessionStorage.setItem('__test__', 'val')
+      expect(sessionStorage.getItem('__test__')).toBe('val')
+      sessionStorage.removeItem('__test__')
+      expect(sessionStorage.getItem('__test__')).toBe(null)
     }
   )
 })
@@ -47,9 +54,8 @@ describe('Auto-Save (Decision 8.1: configurable, default auto)', () => {
     store.set('key', 'value')
 
     const saved = storage.getItem('@motioneffector/flags')
-    expect(saved).not.toBeNull()
-    expect(typeof saved).toBe('string')
-    expect(saved).toContain('key')
+    const parsed = JSON.parse(saved!)
+    expect(parsed.key).toBe('value')
   })
 
   it('state saved after set()', () => {
@@ -105,7 +111,7 @@ describe('Auto-Save (Decision 8.1: configurable, default auto)', () => {
 
     const saved = storage.getItem('@motioneffector/flags')
     const parsed = JSON.parse(saved!)
-    expect(Object.keys(parsed)).toHaveLength(0)
+    expect(parsed).toEqual({})
   })
 
   it('state saved after setMany()', () => {
@@ -124,7 +130,8 @@ describe('Auto-Save (Decision 8.1: configurable, default auto)', () => {
     store.set('key', 'value')
 
     const saved = storage.getItem('@motioneffector/flags')
-    expect(saved).toBeNull()
+    expect(saved).toBe(null)
+    expect(store.get('key')).toBe('value')
   })
 
   it('with autoSave disabled, changes are not persisted automatically', () => {
@@ -133,7 +140,8 @@ describe('Auto-Save (Decision 8.1: configurable, default auto)', () => {
     store.set('b', 2)
 
     const saved = storage.getItem('@motioneffector/flags')
-    expect(saved).toBeNull()
+    expect(saved).toBe(null)
+    expect(store.get('a')).toBe(1)
   })
 })
 
@@ -151,8 +159,6 @@ describe('Manual Save/Load', () => {
     store.save()
 
     const saved = storage.getItem('@motioneffector/flags')
-    expect(saved).not.toBeNull()
-    expect(typeof saved).toBe('string')
     expect(JSON.parse(saved!)).toEqual({ key: 'value' })
   })
 
@@ -202,8 +208,8 @@ describe('Storage Key (Decision 8.3: configurable with default)', () => {
     store.set('key', 'value')
 
     const saved = storage.getItem('@motioneffector/flags')
-    expect(saved).not.toBeNull()
-    expect(typeof saved).toBe('string')
+    const parsed = JSON.parse(saved!)
+    expect(parsed.key).toBe('value')
   })
 
   it("custom key via { persist: { storage, key: 'custom' } }", () => {
@@ -211,9 +217,9 @@ describe('Storage Key (Decision 8.3: configurable with default)', () => {
     store.set('key', 'value')
 
     const saved = storage.getItem('custom')
-    expect(saved).not.toBeNull()
-    expect(typeof saved).toBe('string')
-    expect(storage.getItem('@motioneffector/flags')).toBeNull()
+    const parsed = JSON.parse(saved!)
+    expect(parsed.key).toBe('value')
+    expect(storage.getItem('@motioneffector/flags')).toBe(null)
   })
 
   it("different stores with different keys don't conflict", () => {
@@ -278,7 +284,6 @@ describe('Serialization', () => {
 
     const store2 = createFlagStore({ persist: { storage } })
     expect(store2.get('flag')).toBe(true)
-    expect(typeof store2.get('flag')).toBe('boolean')
   })
 
   it('boolean false survives round-trip', () => {
@@ -287,7 +292,6 @@ describe('Serialization', () => {
 
     const store2 = createFlagStore({ persist: { storage } })
     expect(store2.get('flag')).toBe(false)
-    expect(typeof store2.get('flag')).toBe('boolean')
   })
 
   it('positive integer survives round-trip', () => {
@@ -296,7 +300,6 @@ describe('Serialization', () => {
 
     const store2 = createFlagStore({ persist: { storage } })
     expect(store2.get('count')).toBe(42)
-    expect(typeof store2.get('count')).toBe('number')
   })
 
   it('negative integer survives round-trip', () => {
@@ -329,7 +332,6 @@ describe('Serialization', () => {
 
     const store2 = createFlagStore({ persist: { storage } })
     expect(store2.get('name')).toBe('alice')
-    expect(typeof store2.get('name')).toBe('string')
   })
 
   it('empty string survives round-trip', () => {
@@ -347,9 +349,9 @@ describe('Serialization', () => {
     store1.set('str', 'hello')
 
     const store2 = createFlagStore({ persist: { storage } })
-    expect(typeof store2.get('bool')).toBe('boolean')
-    expect(typeof store2.get('num')).toBe('number')
-    expect(typeof store2.get('str')).toBe('string')
+    expect(store2.get('bool')).toBe(true)
+    expect(store2.get('num')).toBe(42)
+    expect(store2.get('str')).toBe('hello')
   })
 })
 

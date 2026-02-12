@@ -123,7 +123,9 @@ describe('store.subscribe(callback)', () => {
       const callback = vi.fn()
       const unsubscribe = store.subscribe(callback)
 
-      expect(typeof unsubscribe).toBe('function')
+      unsubscribe()
+      store.set('key', 'value')
+      expect(callback).not.toHaveBeenCalled()
     })
 
     it('calling unsubscribe stops future callbacks', () => {
@@ -326,18 +328,19 @@ describe('store.subscribe(callback)', () => {
     })
 
     it('unsubscribe during callback prevents callback for current change', () => {
-      let unsub: (() => void) | undefined
       const laterCallback = vi.fn()
+
       const earlyCallback = vi.fn(() => {
-        if (unsub) unsub()
+        unsub()
       })
 
       store.subscribe(earlyCallback)
-      unsub = store.subscribe(laterCallback)
+      const unsub = store.subscribe(laterCallback)
 
       store.set('key', 'value')
 
       expect(earlyCallback).toHaveBeenCalledTimes(1)
+      expect(earlyCallback).toHaveBeenCalledWith('key', 'value', undefined)
       expect(laterCallback).not.toHaveBeenCalled()
     })
   })
@@ -404,7 +407,9 @@ describe('store.subscribeKey(key, callback)', () => {
       const callback = vi.fn()
       const unsubscribe = store.subscribeKey('key', callback)
 
-      expect(typeof unsubscribe).toBe('function')
+      unsubscribe()
+      store.set('key', 'value')
+      expect(callback).not.toHaveBeenCalled()
     })
 
     it('calling unsubscribe stops future callbacks for that key', () => {

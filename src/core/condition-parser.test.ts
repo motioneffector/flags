@@ -717,23 +717,22 @@ describe('store.check(condition) - Edge Cases', () => {
   describe('String Ordering Not Supported (Decision 5.5: throws ParseError)', () => {
     it('\'name > "alice"\' throws ParseError with message indicating ordering not supported for strings', () => {
       store.set('name', 'bob')
-      expect(() => store.check('name > "alice"')).toThrow(ParseError)
       expect(() => store.check('name > "alice"')).toThrow(/ordering not supported for strings/)
     })
 
     it('\'name < "zebra"\' throws ParseError', () => {
       store.set('name', 'alice')
-      expect(() => store.check('name < "zebra"')).toThrow(ParseError)
+      expect(() => store.check('name < "zebra"')).toThrow(/ordering not supported for strings/)
     })
 
     it('\'name >= "a"\' throws ParseError', () => {
       store.set('name', 'alice')
-      expect(() => store.check('name >= "a"')).toThrow(ParseError)
+      expect(() => store.check('name >= "a"')).toThrow(/ordering not supported for strings/)
     })
 
     it('\'name <= "z"\' throws ParseError', () => {
       store.set('name', 'alice')
-      expect(() => store.check('name <= "z"')).toThrow(ParseError)
+      expect(() => store.check('name <= "z"')).toThrow(/ordering not supported for strings/)
     })
   })
 
@@ -801,57 +800,55 @@ describe('store.check(condition) - Edge Cases', () => {
 
   describe('Empty/Invalid Conditions (Decision 5.2: throw)', () => {
     it('check(\'\') throws ParseError with message "Condition cannot be empty"', () => {
-      expect(() => store.check('')).toThrow(ParseError)
       expect(() => store.check('')).toThrow(/Condition cannot be empty/)
     })
 
     it('check(\'   \') throws ParseError with message "Condition cannot be empty"', () => {
-      expect(() => store.check('   ')).toThrow(ParseError)
       expect(() => store.check('   ')).toThrow(/Condition cannot be empty/)
     })
 
     it("check('AND') throws ParseError (operator without operands)", () => {
-      expect(() => store.check('AND')).toThrow(ParseError)
+      expect(() => store.check('AND')).toThrow(/Unexpected token/)
     })
 
     it("check('a AND') throws ParseError (incomplete expression)", () => {
-      expect(() => store.check('a AND')).toThrow(ParseError)
+      expect(() => store.check('a AND')).toThrow(/Unexpected end of expression/)
     })
 
     it("check('AND b') throws ParseError (incomplete expression)", () => {
-      expect(() => store.check('AND b')).toThrow(ParseError)
+      expect(() => store.check('AND b')).toThrow(/Unexpected token/)
     })
 
     it("check('a AND AND b') throws ParseError (consecutive operators)", () => {
-      expect(() => store.check('a AND AND b')).toThrow(ParseError)
+      expect(() => store.check('a AND AND b')).toThrow(/Unexpected token/)
     })
 
     it("check('(a AND b') throws ParseError (unclosed parenthesis)", () => {
-      expect(() => store.check('(a AND b')).toThrow(ParseError)
+      expect(() => store.check('(a AND b')).toThrow(/Expected/)
     })
 
     it("check('a AND b)') throws ParseError (unmatched closing parenthesis)", () => {
-      expect(() => store.check('a AND b)')).toThrow(ParseError)
+      expect(() => store.check('a AND b)')).toThrow(/Unexpected token/)
     })
 
     it("check('()') throws ParseError (empty parentheses)", () => {
-      expect(() => store.check('()')).toThrow(ParseError)
+      expect(() => store.check('()')).toThrow(/Unexpected/)
     })
 
     it("check('a == ') throws ParseError (missing value)", () => {
-      expect(() => store.check('a == ')).toThrow(ParseError)
+      expect(() => store.check('a == ')).toThrow(/Unexpected end of expression/)
     })
 
     it("check('== 5') throws ParseError (missing flag name)", () => {
-      expect(() => store.check('== 5')).toThrow(ParseError)
+      expect(() => store.check('== 5')).toThrow(/Unexpected token/)
     })
 
     it("check('a >> 5') throws ParseError (invalid operator)", () => {
-      expect(() => store.check('a >> 5')).toThrow(ParseError)
+      expect(() => store.check('a >> 5')).toThrow(/Unexpected token/)
     })
 
     it("check('a === 5') throws ParseError (invalid operator)", () => {
-      expect(() => store.check('a === 5')).toThrow(ParseError)
+      expect(() => store.check('a === 5')).toThrow(/Unexpected character/)
     })
   })
 })
